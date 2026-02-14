@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Littlefield Technologies Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            surface:  { DEFAULT: '#12121a', 50: '#1a1a2e', 100: '#16162a' },
+            dark:     { DEFAULT: '#0a0a0f', 50: '#0e0e16' },
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.6s ease-out both',
+            'slide-up': 'slideUp 0.5s ease-out both',
+            'glow': 'glow 2s ease-in-out infinite alternate',
+            'shimmer': 'shimmer 2s linear infinite',
+          },
+          keyframes: {
+            fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
+            slideUp: { from: { opacity: '0', transform: 'translateY(20px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+            glow: { from: { boxShadow: '0 0 20px rgba(99,102,241,0.15)' }, to: { boxShadow: '0 0 40px rgba(99,102,241,0.3)' } },
+            shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { background: #0a0a0f; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+    .card {
+      background: rgba(18,18,26,0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.10); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+
+    .input-field {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #e2e8f0;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-field:focus {
+      border-color: rgba(129,140,248,0.5);
+      box-shadow: 0 0 0 3px rgba(129,140,248,0.1);
+    }
+    .input-field option { background: #1a1a2e; color: #e2e8f0; }
+    select.input-field { cursor: pointer; }
+
+    .run-btn {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 16px 48px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .run-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99,102,241,0.4); }
+    .run-btn:active { transform: translateY(0); }
+    .run-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .run-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+    }
+
+    .preset-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #94a3b8;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; border-color: rgba(255,255,255,0.15); }
+    .preset-btn.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: #a5b4fc; }
+
+    .stat-glass {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-glass .accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 16px 16px 0 0; }
+
+    .tl-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 100px 40px;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      animation: fadeIn 0.3s ease-out;
+    }
+    .tl-row .input-field { padding: 8px 10px; font-size: 13px; }
+
+    .remove-btn {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      background: rgba(244,63,94,0.08);
+      border: 1px solid rgba(244,63,94,0.15);
+      color: #f43f5e;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 16px;
+    }
+    .remove-btn:hover { background: rgba(244,63,94,0.2); border-color: rgba(244,63,94,0.4); }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #475569);
+    }
+    .section-label::after {
+      content: '';
+      display: block;
+      flex: 1;
+      min-width: 40px;
+      height: 1px;
+      background: linear-gradient(90deg, #475569, transparent);
+    }
+
+    .flow-step {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .flow-arrow { color: #475569; font-size: 14px; }
+
+    .chart-card {
+      background: rgba(18,18,26,0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 20px 20px 16px;
+    }
+    .chart-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+
+    .results-section > * { animation: slideUp 0.5s ease-out both; }
+    .results-section > *:nth-child(1) { animation-delay: 0.0s; }
+    .results-section > *:nth-child(2) { animation-delay: 0.1s; }
+    .results-section > *:nth-child(3) { animation-delay: 0.2s; }
+    .results-section > *:nth-child(4) { animation-delay: 0.3s; }
+
+    @keyframes countUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .checkbox-custom {
+      appearance: none; width: 18px; height: 18px; border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 5px; background: rgba(255,255,255,0.04); cursor: pointer;
+      position: relative; transition: all 0.2s;
+    }
+    .checkbox-custom:checked { background: #6366f1; border-color: #6366f1; }
+    .checkbox-custom:checked::after {
+      content: ''; position: absolute; top: 2px; left: 5px;
+      width: 5px; height: 9px;
+      border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+    }
+    .checkbox-custom:focus { box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen text-slate-300">
+
+  <!-- ━━ Header ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <header class="relative overflow-hidden border-b border-white/5">
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-950/50 via-transparent to-violet-950/30"></div>
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl"></div>
+
+    <div class="relative max-w-7xl mx-auto px-6 py-10">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-extrabold text-white tracking-tight">Littlefield Technologies</h1>
+          <p class="text-sm text-indigo-300/70">Discrete-Event Factory Simulator</p>
+        </div>
+      </div>
+
+      <!-- Factory flow diagram -->
+      <div class="mt-6 flex flex-wrap items-center gap-2 text-slate-400">
+        <div class="flow-step bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="12" rx="1"/></svg>
+          S1 Stuffing</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/></svg>
+          S2 Testing</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step bg-blue-500/10 text-blue-400 border border-blue-500/20">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1z"/><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 110-12 6 6 0 010 12z"/></svg>
+          S3 Tuning</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/></svg>
+          S2 Re-test</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          Revenue</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-10">
+
+    <!-- ━━ Configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div>
+      <div class="section-label">Configuration</div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <!-- Factory -->
+        <div class="card">
+          <div class="flex items-center gap-2 mb-5">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            </div>
+            <h2 class="text-sm font-semibold text-white">Factory Setup</h2>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Station 1 &mdash; Stuffers</label>
+              <input id="stuffers" type="number" value="3" min="1" max="20" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">$90K each &middot; Step 1</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Station 2 &mdash; Testers <span class="text-rose-400 font-normal">(bottleneck)</span></label>
+              <input id="testers" type="number" value="2" min="1" max="20" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">$80K each &middot; Steps 2 &amp; 4</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Station 3 &mdash; Tuners</label>
+              <input id="tuners" type="number" value="1" min="1" max="20" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">$100K each &middot; Step 3</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Lot Size</label>
+              <input id="lot_size" type="number" value="60" min="1" max="120" class="input-field">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Contract</label>
+              <select id="contract" class="input-field">
+                <option value="1" selected>C1 &mdash; $750 / 7-day</option>
+                <option value="2">C2 &mdash; $1,000 / 1-day</option>
+                <option value="3">C3 &mdash; $1,250 / 0.5-day</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-2.5 pt-1">
+              <input id="priority_step4" type="checkbox" class="checkbox-custom">
+              <label for="priority_step4" class="text-xs text-slate-400 cursor-pointer">Priority to Step 4 at S2</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory -->
+        <div class="card">
+          <div class="flex items-center gap-2 mb-5">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <h2 class="text-sm font-semibold text-white">Inventory Policy</h2>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Initial Kits</label>
+              <input id="initial_inventory" type="number" value="9600" min="0" max="100000" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">Stock at Day 0</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Reorder Point (ROP)</label>
+              <input id="reorder_point" type="number" value="1800" min="0" max="50000" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">Trigger reorder at this level</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Order Quantity (Q)</label>
+              <input id="order_quantity" type="number" value="3600" min="0" max="50000" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">0 = stop ordering</p>
+            </div>
+            <div class="mt-4 rounded-xl bg-white/[0.02] border border-white/5 p-4 space-y-2">
+              <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Economics</p>
+              <div class="grid grid-cols-2 gap-y-1.5 text-[11px] text-slate-500">
+                <span>Kit cost</span><span class="text-right text-slate-400">$10/kit + $1K ship</span>
+                <span>Lead time</span><span class="text-right text-slate-400">4 days</span>
+                <span>Cash interest</span><span class="text-right text-emerald-400/70">+10%/yr</span>
+                <span>Debt interest</span><span class="text-right text-rose-400/70">-20%/yr</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulation -->
+        <div class="card">
+          <div class="flex items-center gap-2 mb-5">
+            <div class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+              <svg class="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <h2 class="text-sm font-semibold text-white">Simulation</h2>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">End Day</label>
+              <input id="end_day" type="number" value="485" min="50" max="1000" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">Manage 50-385 &middot; 100 unmanaged</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Interarrival Time (days)</label>
+              <input id="interarrival_mean" type="number" value="0.125" min="0.05" max="2" step="0.01" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">0.125 = ~8 orders/day</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Random Seed</label>
+              <input id="seed" type="number" value="42" min="1" max="999999" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">Different seeds = different scenarios</p>
+            </div>
+          </div>
+          <!-- Tip -->
+          <div class="mt-5 rounded-xl bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/10 p-4">
+            <div class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+              <p class="text-[11px] text-amber-200/60 leading-relaxed"><strong class="text-amber-300/80">Tip:</strong> Station 2 handles Steps 2 &amp; 4 &mdash; it&rsquo;s the bottleneck at ~90% utilization. Buy testers first, then upgrade your contract.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ━━ Strategy Timeline ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div>
+      <div class="section-label">Strategy Timeline</div>
+      <div class="card">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+          <p class="text-xs text-slate-500">Schedule actions during your management window <span class="text-slate-600">(Day 50 &ndash; 385)</span></p>
+          <div class="flex flex-wrap gap-2" id="preset-btns">
+            <button onclick="loadPreset('conservative', this)" class="preset-btn">Conservative</button>
+            <button onclick="loadPreset('balanced', this)" class="preset-btn active" id="preset-balanced">Balanced</button>
+            <button onclick="loadPreset('aggressive', this)" class="preset-btn">Aggressive</button>
+            <button onclick="loadPreset('clear', this)" class="preset-btn" style="color:#f43f5e; border-color: rgba(244,63,94,0.15);">Clear</button>
+          </div>
+        </div>
+
+        <!-- Timeline header -->
+        <div class="grid grid-cols-[80px_1fr_100px_40px] gap-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider pb-2 border-b border-white/5 mb-1">
+          <span>Day</span><span>Action</span><span>Value</span><span></span>
+        </div>
+        <div id="timeline-body"></div>
+
+        <button onclick="addRow()" class="mt-4 flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Add Action
+        </button>
+      </div>
+    </div>
+
+    <!-- ━━ Run Button ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="flex justify-center py-4">
+      <button id="run-btn" onclick="runSim()" class="run-btn animate-glow">
+        <span id="run-label" class="relative z-10 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Run Simulation
+        </span>
+      </button>
+    </div>
+
+    <!-- ━━ Results ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="results" class="hidden results-section space-y-8">
+
+      <div class="section-label">Results</div>
+
+      <!-- Summary Stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="stat-glass">
+          <div class="accent bg-gradient-to-r from-emerald-500 to-emerald-400"></div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-emerald-400/60 uppercase tracking-wider">Final Cash</span>
+          </div>
+          <p id="stat-cash" class="text-2xl font-bold text-white">&mdash;</p>
+        </div>
+
+        <div class="stat-glass">
+          <div class="accent bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-blue-400/60 uppercase tracking-wider">Avg Lead Time</span>
+          </div>
+          <p id="stat-lt" class="text-2xl font-bold text-white">&mdash;</p>
+        </div>
+
+        <div class="stat-glass">
+          <div class="accent bg-gradient-to-r from-violet-500 to-purple-400"></div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-violet-400/60 uppercase tracking-wider">Orders Done</span>
+          </div>
+          <p id="stat-orders" class="text-2xl font-bold text-white">&mdash;</p>
+        </div>
+
+        <div class="stat-glass">
+          <div class="accent bg-gradient-to-r from-amber-500 to-orange-400"></div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-amber-400/60 uppercase tracking-wider">Avg Rev / Order</span>
+          </div>
+          <p id="stat-rev" class="text-2xl font-bold text-white">&mdash;</p>
+        </div>
+      </div>
+
+      <!-- Day 50 Snapshot -->
+      <div class="rounded-2xl bg-gradient-to-r from-indigo-500/5 to-violet-500/5 border border-indigo-500/10 p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+          <span class="text-xs font-semibold text-indigo-300/80">Day 50 Snapshot</span>
+          <span class="text-[10px] text-indigo-300/40">&mdash; compare with your real game data</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Cash</p>
+            <p id="stat-d50-cash" class="text-sm font-semibold text-indigo-200 font-mono">&mdash;</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Inventory</p>
+            <p id="stat-d50-inv" class="text-sm font-semibold text-indigo-200 font-mono">&mdash;</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Max Lead Time</p>
+            <p id="stat-max-lt" class="text-sm font-semibold text-indigo-200 font-mono">&mdash;</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Waiting for Kits</p>
+            <p id="stat-waiting" class="text-sm font-semibold text-indigo-200 font-mono">&mdash;</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="chart-card">
+          <div class="chart-title flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Cash Over Time
+          </div>
+          <canvas id="chart-cash"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-400"></span> Lead Times
+          </div>
+          <canvas id="chart-lt"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-rose-400"></span> Station Utilization
+          </div>
+          <canvas id="chart-util"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-violet-400"></span> Kit Inventory
+          </div>
+          <canvas id="chart-inv"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 mt-16">
+    <div class="max-w-7xl mx-auto px-6 py-8 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-xs text-slate-600">
+        <div class="w-5 h-5 rounded bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+          <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+        </div>
+        Littlefield Technologies Simulator
+      </div>
+      <p class="text-[11px] text-slate-700">Yale MGT 422 &middot; Operations Engine</p>
+    </div>
+  </footer>
+
+<script>
+/* ━━ Presets ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+const PRESETS = {
+  conservative: [
+    { day: 55,  action: "buy_tester",          value: 1 },
+    { day: 60,  action: "set_reorder_point",    value: 3600 },
+    { day: 60,  action: "set_order_quantity",    value: 5400 },
+    { day: 120, action: "set_contract",          value: 2 },
+  ],
+  balanced: [
+    { day: 55,  action: "buy_tester",            value: 1 },
+    { day: 55,  action: "buy_tuner",              value: 1 },
+    { day: 60,  action: "set_reorder_point",      value: 3600 },
+    { day: 60,  action: "set_order_quantity",      value: 5400 },
+    { day: 90,  action: "set_contract",            value: 2 },
+  ],
+  aggressive: [
+    { day: 55,  action: "buy_tester",              value: 1 },
+    { day: 60,  action: "set_reorder_point",        value: 3600 },
+    { day: 60,  action: "set_order_quantity",        value: 5400 },
+    { day: 75,  action: "buy_tester",              value: 1 },
+    { day: 80,  action: "set_contract",              value: 2 },
+    { day: 100, action: "buy_tuner",                value: 1 },
+    { day: 120, action: "set_contract",              value: 3 },
+    { day: 120, action: "set_priority_step4",        value: 1 },
+  ],
+};
+
+const ACTIONS = [
+  { v: "buy_stuffer",        l: "Buy Stuffer(s) — $90K" },
+  { v: "buy_tester",         l: "Buy Tester(s) — $80K" },
+  { v: "buy_tuner",          l: "Buy Tuner(s) — $100K" },
+  { v: "sell_stuffer",       l: "Sell Stuffer(s) — $10K" },
+  { v: "sell_tester",        l: "Sell Tester(s) — $10K" },
+  { v: "sell_tuner",         l: "Sell Tuner(s) — $10K" },
+  { v: "set_contract",       l: "Switch Contract (1/2/3)" },
+  { v: "set_lot_size",       l: "Set Lot Size" },
+  { v: "set_reorder_point",  l: "Set Reorder Point" },
+  { v: "set_order_quantity", l: "Set Order Quantity" },
+  { v: "set_priority_step4", l: "Priority Step 4 (0/1)" },
+];
+
+/* ━━ Timeline ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function addRow(day = 50, action = "buy_tester", value = 1) {
+  const body = document.getElementById("timeline-body");
+  const row = document.createElement("div");
+  row.className = "tl-row";
+  const opts = ACTIONS.map(a =>
+    `<option value="${a.v}" ${a.v === action ? "selected" : ""}>${a.l}</option>`
+  ).join("");
+  row.innerHTML = `
+    <input type="number" value="${day}" min="0" max="485" class="input-field tl-day">
+    <select class="input-field tl-action">${opts}</select>
+    <input type="number" value="${value}" min="0" max="50000" class="input-field tl-value">
+    <button onclick="this.parentElement.remove()" class="remove-btn">&times;</button>
+  `;
+  body.appendChild(row);
+}
+
+function loadPreset(name, btn) {
+  document.getElementById("timeline-body").innerHTML = "";
+  document.querySelectorAll("#preset-btns .preset-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  if (name !== "clear") (PRESETS[name] || []).forEach(a => addRow(a.day, a.action, a.value));
+}
+
+/* ━━ Config ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function getConfig() {
+  const n = id => Number(document.getElementById(id).value);
+  const timeline = [];
+  document.querySelectorAll(".tl-row").forEach(row => {
+    timeline.push({
+      day:    Number(row.querySelector(".tl-day").value),
+      action: row.querySelector(".tl-action").value,
+      value:  Number(row.querySelector(".tl-value").value),
+    });
+  });
+  return {
+    stuffers: n("stuffers"), testers: n("testers"), tuners: n("tuners"),
+    lot_size: n("lot_size"), contract: n("contract"),
+    priority_step4: document.getElementById("priority_step4").checked,
+    initial_inventory: n("initial_inventory"),
+    reorder_point: n("reorder_point"), order_quantity: n("order_quantity"),
+    end_day: n("end_day"), interarrival_mean: Number(document.getElementById("interarrival_mean").value),
+    seed: n("seed"), timeline,
+  };
+}
+
+/* ━━ Charts ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+Chart.defaults.font.family = 'Inter';
+Chart.defaults.font.size = 11;
+
+let charts = {};
+function killCharts() { Object.values(charts).forEach(c => c.destroy()); charts = {}; }
+
+function mk(id, cfg) {
+  charts[id] = new Chart(document.getElementById(id).getContext("2d"), cfg);
+}
+
+function gradient(ctx, c1, c2) {
+  const g = ctx.createLinearGradient(0, 0, 0, 300);
+  g.addColorStop(0, c1); g.addColorStop(1, c2); return g;
+}
+
+function renderCharts(c) {
+  killCharts();
+  const cashCtx = document.getElementById("chart-cash").getContext("2d");
+  const invCtx  = document.getElementById("chart-inv").getContext("2d");
+
+  mk("chart-cash", {
+    type: "line",
+    data: {
+      labels: c.cash.map(p => p[0]),
+      datasets: [{
+        data: c.cash.map(p => p[1]),
+        borderColor: "#34d399",
+        backgroundColor: gradient(cashCtx, "rgba(52,211,153,0.15)", "rgba(52,211,153,0)"),
+        fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => "$" + Math.round(ctx.parsed.y).toLocaleString() } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 10 }, title: { display: true, text: "Day", color: "#475569" } },
+        y: { ticks: { callback: v => "$" + (v/1000).toFixed(0) + "K" }, title: { display: true, text: "Cash", color: "#475569" } },
+      },
+    },
+  });
+
+  mk("chart-lt", {
+    type: "scatter",
+    data: {
+      datasets: [{
+        data: c.lead_times.map(p => ({ x: p[0], y: p[1] })),
+        backgroundColor: "rgba(96,165,250,0.35)",
+        borderColor: "rgba(96,165,250,0.6)",
+        pointRadius: 1.2, pointHoverRadius: 4, borderWidth: 0.5,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(3) + " days" } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 10 }, title: { display: true, text: "Day", color: "#475569" } },
+        y: { min: 0, title: { display: true, text: "Lead Time (days)", color: "#475569" } },
+      },
+    },
+  });
+
+  mk("chart-util", {
+    type: "line",
+    data: {
+      labels: c.util_0.map(p => p[0]),
+      datasets: [
+        { label: "S1 Stuffing", data: c.util_0.map(p => p[1]), borderColor: "#fbbf24", borderWidth: 1.5, tension: 0.4, pointRadius: 0, backgroundColor: "transparent" },
+        { label: "S2 Testing",  data: c.util_1.map(p => p[1]), borderColor: "#f43f5e", borderWidth: 2,   tension: 0.4, pointRadius: 0, backgroundColor: "transparent" },
+        { label: "S3 Tuning",   data: c.util_2.map(p => p[1]), borderColor: "#60a5fa", borderWidth: 1.5, tension: 0.4, pointRadius: 0, backgroundColor: "transparent" },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "top", labels: { boxWidth: 10, padding: 16, usePointStyle: true, pointStyle: "circle" } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 10 }, title: { display: true, text: "Day", color: "#475569" } },
+        y: { min: 0, max: 1, ticks: { callback: v => (v*100).toFixed(0) + "%" }, title: { display: true, text: "Utilization", color: "#475569" } },
+      },
+    },
+  });
+
+  mk("chart-inv", {
+    type: "line",
+    data: {
+      labels: c.inventory.map(p => p[0]),
+      datasets: [{
+        data: c.inventory.map(p => p[1]),
+        borderColor: "#a78bfa",
+        backgroundColor: gradient(invCtx, "rgba(167,139,250,0.12)", "rgba(167,139,250,0)"),
+        fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + " kits" } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 10 }, title: { display: true, text: "Day", color: "#475569" } },
+        y: { min: 0, title: { display: true, text: "Kits on Hand", color: "#475569" } },
+      },
+    },
+  });
+}
+
+/* ━━ Run ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+async function runSim() {
+  const btn = document.getElementById("run-btn");
+  const label = document.getElementById("run-label");
+  btn.disabled = true;
+  label.innerHTML = '<span class="spinner"></span> Simulating...';
+
+  try {
+    const resp = await fetch("/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(getConfig()),
+    });
+    const data = await resp.json();
+    if (data.error) { alert("Error: " + data.error); return; }
+
+    const s = data.summary;
+    const fmt = n => "$" + Math.round(n).toLocaleString();
+
+    document.getElementById("stat-cash").textContent    = fmt(s.final_cash);
+    document.getElementById("stat-lt").textContent       = s.avg_lead_time.toFixed(2) + " days";
+    document.getElementById("stat-orders").textContent    = s.orders_completed.toLocaleString();
+    document.getElementById("stat-rev").textContent       = fmt(s.avg_revenue);
+    document.getElementById("stat-d50-cash").textContent  = fmt(s.day50_cash);
+    document.getElementById("stat-d50-inv").textContent   = (s.day50_inventory || 0).toLocaleString() + " kits";
+    document.getElementById("stat-max-lt").textContent    = s.max_lead_time.toFixed(2) + " d";
+    document.getElementById("stat-waiting").textContent   = s.orders_waiting + " orders";
+
+    renderCharts(data.charts);
+
+    const results = document.getElementById("results");
+    results.classList.remove("hidden");
+    // Re-trigger animations
+    results.style.animation = 'none';
+    results.offsetHeight;
+    results.style.animation = null;
+    results.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  } catch (e) {
+    alert("Request failed: " + e.message);
+  } finally {
+    btn.disabled = false;
+    label.innerHTML = `
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Run Simulation`;
+  }
+}
+
+/* ━━ Init ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+loadPreset("balanced", document.getElementById("preset-balanced"));
+</script>
+</body>
+</html>
