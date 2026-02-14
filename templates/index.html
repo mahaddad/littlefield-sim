@@ -127,6 +127,13 @@
       border-bottom: 1px solid rgba(255,255,255,0.04);
       animation: fadeIn 0.3s ease-out;
     }
+    @media (max-width: 639px) {
+      .tl-row {
+        grid-template-columns: 1fr 1fr 40px;
+        grid-template-rows: auto auto;
+      }
+      .tl-row .tl-action { grid-column: 1 / -1; }
+    }
     .tl-row .input-field { padding: 8px 10px; font-size: 13px; }
 
     .remove-btn {
@@ -402,8 +409,8 @@
           </div>
         </div>
 
-        <!-- Timeline header -->
-        <div class="grid grid-cols-[80px_1fr_100px_40px] gap-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider pb-2 border-b border-white/5 mb-1">
+        <!-- Timeline header (hidden on mobile since layout changes) -->
+        <div class="hidden sm:grid grid-cols-[80px_1fr_100px_40px] gap-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider pb-2 border-b border-white/5 mb-1">
           <span>Day</span><span>Action</span><span>Value</span><span></span>
         </div>
         <div id="timeline-body"></div>
@@ -600,9 +607,9 @@ function addRow(day = 50, action = "buy_tester", value = 1) {
     `<option value="${a.v}" ${a.v === action ? "selected" : ""}>${a.l}</option>`
   ).join("");
   row.innerHTML = `
-    <input type="number" value="${day}" min="0" max="485" class="input-field tl-day">
+    <input type="number" value="${day}" min="0" max="485" class="input-field tl-day" placeholder="Day">
     <select class="input-field tl-action">${opts}</select>
-    <input type="number" value="${value}" min="0" max="50000" class="input-field tl-value">
+    <input type="number" value="${value}" min="0" max="50000" class="input-field tl-value" placeholder="Value">
     <button onclick="this.parentElement.remove()" class="remove-btn">&times;</button>
   `;
   body.appendChild(row);
