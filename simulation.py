@@ -105,6 +105,8 @@ class Simulation:
         self.busy = [0, 0, 0]         # machines currently busy
         self.busy_accum = [0.0, 0.0, 0.0]
         self.kit_wait   = []          # orders waiting for inventory
+        self.warnings   = []          # blocked / skipped actions
+        self._last_reorder_warn = -1  # dedup kit reorder warnings
 
         # ── metrics ──
         self._last_day  = 0
@@ -160,24 +162,39 @@ class Simulation:
                 kit_reserve = (KIT_SHIP_COST + KIT_UNIT_COST * self.roq) if self.roq > 0 else 0
                 available = self.cash - kit_reserve
                 affordable = max(0, int(available // MACHINE_COST[idx])) if MACHINE_COST[idx] > 0 else 0
+                requested = n
                 n = min(n, affordable)
+                if n < requested:
+                    name = ["stuffer", "tester", "tuner"][idx]
+                    if n == 0:
+                        self.warnings.append(
+                            f"Day {int(self.t)}: Could not buy {requested} {name}(s) — "
+                            f"need ${MACHINE_COST[idx]*requested + kit_reserve:,.0f} "
+                            f"(incl. ${kit_reserve:,.0f} kit reserve), "
+                            f"have ${self.cash:,.0f}")
+                    else:
+                        self.warnings.append(
+                            f"Day {int(self.t)}: Could only buy {n}/{requested} {name}(s) — "
+                            f"insufficient cash for the rest")
                 if n > 0:
                     self.machines[idx] += n
                     self.cash -= MACHINE_COST[idx] * n
-            elif act == "sell_stuffer":
-                n = min(int(val), self.machines[0] - 1)
+            elif act in ("sell_stuffer", "sell_tester", "sell_tuner"):
+                idx = {"sell_stuffer": 0, "sell_tester": 1, "sell_tuner": 2}[act]
+                name = ["stuffer", "tester", "tuner"][idx]
+                requested = int(val)
+                n = min(requested, self.machines[idx] - 1)
+                if n < requested:
+                    if n == 0:
+                        self.warnings.append(
+                            f"Day {int(self.t)}: Could not sell {name} — "
+                            f"must keep at least 1 (have {self.machines[idx]})")
+                    else:
+                        self.warnings.append(
+                            f"Day {int(self.t)}: Could only sell {n}/{requested} {name}(s) — "
+                            f"must keep at least 1")
                 if n > 0:
-                    self.machines[0] -= n
-                    self.cash += MACHINE_SELL * n
-            elif act == "sell_tester":
-                n = min(int(val), self.machines[1] - 1)
-                if n > 0:
-                    self.machines[1] -= n
-                    self.cash += MACHINE_SELL * n
-            elif act == "sell_tuner":
-                n = min(int(val), self.machines[2] - 1)
-                if n > 0:
-                    self.machines[2] -= n
+                    self.machines[idx] -= n
                     self.cash += MACHINE_SELL * n
             elif act == "set_contract":
                 self.price, self.quoted_lt, self.max_lt = CONTRACTS[int(val)]
@@ -218,7 +235,13 @@ class Simulation:
         if not self.pending_kits and self.inv <= self.rop and self.roq > 0:
             cost = KIT_SHIP_COST + KIT_UNIT_COST * self.roq
             if self.cash < cost:
-                return                    # can't afford it — skip
+                day = int(self.t)
+                if day != self._last_reorder_warn:
+                    self._last_reorder_warn = day
+                    self.warnings.append(
+                        f"Day {day}: Kit reorder skipped — "
+                        f"need ${cost:,.0f}, have ${self.cash:,.0f}")
+                return
             self.pending_kits = True
             self.cash -= cost
             self._push(self.t + KIT_LEAD_DAYS, E.KIT_DELIVER, qty=self.roq)
@@ -354,6 +377,7 @@ class Simulation:
             return out
 
         return {
+            "warnings": self.warnings,
             "summary": {
                 "final_cash":        round(self.cash, 2),
                 "total_revenue":     round(sum(revs), 2),

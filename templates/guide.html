@@ -578,6 +578,33 @@
         <div class="callout callout-tip">
           <strong>Pro tip:</strong> Use the <strong>Day 50 Snapshot</strong> in simulation results to compare against your real game dashboard. If the numbers match closely, you can trust the simulator's predictions for the rest of the game.
         </div>
+
+        <div id="action-failures"></div>
+        <h3>Why Actions Can Fail</h3>
+        <p>Timeline actions execute based on the simulation state <em>at that day</em> &mdash; not when you set them up. If the conditions aren't met, the action is blocked and you'll see a warning in the results. Here's every failure mode:</p>
+
+        <table class="ref-table my-4">
+          <tr><th>Action</th><th>Fails When</th><th>Game Rule</th></tr>
+          <tr>
+            <td class="font-semibold text-slate-300">Buy machine</td>
+            <td>Remaining cash after purchase would be less than the cost of one kit reorder <code>($1K + $10 &times; ROQ)</code></td>
+            <td>The game prevents machine purchases that would leave you unable to buy raw materials. It uses your <em>current</em> reorder quantity to estimate the reserve.</td>
+          </tr>
+          <tr>
+            <td class="font-semibold text-slate-300">Sell machine</td>
+            <td>You only have 1 machine left at that station</td>
+            <td>Every station must keep at least 1 machine. You can never fully shut down a station.</td>
+          </tr>
+          <tr>
+            <td class="font-semibold text-slate-300">Kit reorder</td>
+            <td>Cash is less than the shipment cost <code>($1K + $10 &times; ROQ)</code></td>
+            <td>Kit orders require payment upfront. If you can't afford it, the reorder is skipped and inventory continues to deplete until you can.</td>
+          </tr>
+        </table>
+
+        <div class="callout callout-warn mt-4">
+          <strong>Workaround for blocked buys:</strong> If a machine purchase is blocked by the kit reserve rule, temporarily lower your reorder quantity (ROQ) before buying. This reduces the reserve threshold. You can raise it again after the purchase.
+        </div>
       </div>
     </section>
 
