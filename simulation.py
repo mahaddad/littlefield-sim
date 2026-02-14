@@ -340,6 +340,16 @@ class Simulation:
                     day50[series_name] = val
                     break
 
+        # smooth utilization with a 7-day rolling average
+        def _smooth(series, window=7):
+            out = []
+            vals = [v for _, v in series]
+            for i, (day, _) in enumerate(series):
+                lo = max(0, i - window + 1)
+                avg = sum(vals[lo:i+1]) / (i - lo + 1)
+                out.append((day, round(avg, 4)))
+            return out
+
         return {
             "summary": {
                 "final_cash":        round(self.cash, 2),
@@ -356,9 +366,9 @@ class Simulation:
                 "cash":       self.ts_cash,
                 "lead_times": self.ts_lt,
                 "inventory":  self.ts_inv,
-                "util_0":     self.ts_util[0],
-                "util_1":     self.ts_util[1],
-                "util_2":     self.ts_util[2],
+                "util_0":     _smooth(self.ts_util[0]),
+                "util_1":     _smooth(self.ts_util[1]),
+                "util_2":     _smooth(self.ts_util[2]),
                 "queue_0":    self.ts_qlen[0],
                 "queue_1":    self.ts_qlen[1],
                 "queue_2":    self.ts_qlen[2],
