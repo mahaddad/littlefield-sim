@@ -155,8 +155,11 @@ class Simulation:
             if act in ("buy_stuffer", "buy_tester", "buy_tuner"):
                 idx = {"buy_stuffer": 0, "buy_tester": 1, "buy_tuner": 2}[act]
                 n = int(val)
-                # only buy what we can afford
-                affordable = int(self.cash // MACHINE_COST[idx]) if MACHINE_COST[idx] > 0 else 0
+                # reserve cash for next kit reorder (game rule: can't buy
+                # a machine if it leaves you unable to reorder materials)
+                kit_reserve = (KIT_SHIP_COST + KIT_UNIT_COST * self.roq) if self.roq > 0 else 0
+                available = self.cash - kit_reserve
+                affordable = max(0, int(available // MACHINE_COST[idx])) if MACHINE_COST[idx] > 0 else 0
                 n = min(n, affordable)
                 if n > 0:
                     self.machines[idx] += n
