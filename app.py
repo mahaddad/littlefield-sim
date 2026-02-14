@@ -11,6 +11,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/guide")
+def guide():
+    return render_template("guide.html")
+
+
 @app.route("/simulate", methods=["POST"])
 def simulate():
     try:

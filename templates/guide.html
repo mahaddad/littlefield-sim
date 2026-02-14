@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Play &mdash; Littlefield Technologies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            surface:  { DEFAULT: '#12121a', 50: '#1a1a2e', 100: '#16162a' },
+            dark:     { DEFAULT: '#0a0a0f', 50: '#0e0e16' },
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.6s ease-out both',
+            'slide-up': 'slideUp 0.5s ease-out both',
+          },
+          keyframes: {
+            fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
+            slideUp: { from: { opacity: '0', transform: 'translateY(20px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { background: #0a0a0f; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+    .card {
+      background: rgba(18,18,26,0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.10); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #475569);
+    }
+    .section-label::after {
+      content: '';
+      display: block;
+      flex: 1;
+      min-width: 40px;
+      height: 1px;
+      background: linear-gradient(90deg, #475569, transparent);
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #e2e8f0;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-field:focus {
+      border-color: rgba(129,140,248,0.5);
+      box-shadow: 0 0 0 3px rgba(129,140,248,0.1);
+    }
+    .input-field option { background: #1a1a2e; color: #e2e8f0; }
+    select.input-field { cursor: pointer; }
+
+    .callout {
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .callout-tip {
+      background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(52,211,153,0.04));
+      border: 1px solid rgba(52,211,153,0.15);
+      color: #a7f3d0;
+    }
+    .callout-warn {
+      background: linear-gradient(135deg, rgba(244,63,94,0.06), rgba(251,113,133,0.04));
+      border: 1px solid rgba(244,63,94,0.15);
+      color: #fecdd3;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .toc-link:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.12);
+      color: #e2e8f0;
+    }
+    .toc-num {
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px;
+      font-size: 11px; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .prose-guide { line-height: 1.75; color: #cbd5e1; font-size: 14px; }
+    .prose-guide p { margin-bottom: 12px; }
+    .prose-guide strong { color: #e2e8f0; }
+    .prose-guide code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #a5b4fc; }
+    .prose-guide h3 { color: #f1f5f9; font-size: 18px; font-weight: 700; margin: 24px 0 12px; }
+
+    /* Pipeline diagram */
+    .pipeline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .pipe-node {
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      min-width: 100px;
+    }
+    .pipe-arrow { color: #475569; font-size: 20px; font-weight: 300; }
+    @media (max-width: 639px) {
+      .pipeline { flex-direction: column; }
+      .pipe-arrow { transform: rotate(90deg); }
+    }
+
+    /* Timeline phases */
+    .phase-bar {
+      display: flex;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 40px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .phase-bar > div {
+      display: flex; align-items: center; justify-content: center;
+      white-space: nowrap; padding: 0 12px;
+    }
+
+    details summary { cursor: pointer; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before { content: '\25B6'; display: inline-block; margin-right: 8px; font-size: 10px; transition: transform 0.2s; color: #64748b; }
+    details[open] summary::before { transform: rotate(90deg); }
+
+    /* Quick-ref table */
+    .ref-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ref-table th { text-align: left; padding: 8px 12px; color: #94a3b8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .ref-table td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #cbd5e1; }
+    .ref-table tr:last-child td { border-bottom: none; }
+
+    .calc-result {
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.2);
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #a5b4fc;
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-300">
+
+  <!-- ━━ Header ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <header class="relative overflow-hidden border-b border-white/5">
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-950/50 via-transparent to-violet-950/30"></div>
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl"></div>
+
+    <div class="relative max-w-4xl mx-auto px-6 py-10">
+      <div class="flex items-center justify-between gap-4 mb-2">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">How to Play</h1>
+            <p class="text-sm text-indigo-300/70">Littlefield Technologies Guide</p>
+          </div>
+        </div>
+        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-300 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all backdrop-blur-sm">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Open Simulator
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-10">
+
+    <!-- ━━ Table of Contents ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div>
+      <div class="section-label">Table of Contents</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <a href="#the-game" class="toc-link"><span class="toc-num bg-indigo-500/15 text-indigo-400">1</span> The Game</a>
+        <a href="#factory-flow" class="toc-link"><span class="toc-num bg-amber-500/15 text-amber-400">2</span> Factory Flow</a>
+        <a href="#reading-data" class="toc-link"><span class="toc-num bg-blue-500/15 text-blue-400">3</span> Reading Game Data</a>
+        <a href="#processing-times" class="toc-link"><span class="toc-num bg-rose-500/15 text-rose-400">4</span> Processing Times</a>
+        <a href="#contracts" class="toc-link"><span class="toc-num bg-emerald-500/15 text-emerald-400">5</span> Contracts &amp; Revenue</a>
+        <a href="#inventory" class="toc-link"><span class="toc-num bg-violet-500/15 text-violet-400">6</span> Inventory Management</a>
+        <a href="#machines" class="toc-link"><span class="toc-num bg-orange-500/15 text-orange-400">7</span> Machine Buying Strategy</a>
+        <a href="#simulator" class="toc-link"><span class="toc-num bg-cyan-500/15 text-cyan-400">8</span> Using the Simulator</a>
+        <a href="#timeline" class="toc-link"><span class="toc-num bg-pink-500/15 text-pink-400">9</span> Recommended Timeline</a>
+      </div>
+    </div>
+
+    <!-- ━━ 1. The Game ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="the-game">
+      <div class="section-label">1 &mdash; The Game</div>
+      <div class="card prose-guide">
+        <h3>What is Littlefield Technologies?</h3>
+        <p>Littlefield is a <strong>real-time factory simulation</strong> where your team manages a circuit board assembly plant. Customer orders arrive randomly, flow through three manufacturing stations, and generate revenue based on how fast you deliver.</p>
+        <p>The simulation runs for <strong>485 days</strong>. You take control at <strong>Day 50</strong> and lose control at <strong>Day 385</strong> &mdash; the last 100 days run on autopilot with whatever settings you left in place.</p>
+        <p><strong>Goal:</strong> Maximize your <strong>cash balance</strong> (cash minus debt) at Day 485. The team with the most cash wins.</p>
+
+        <h3>Quick Reference</h3>
+        <table class="ref-table">
+          <tr><th>Parameter</th><th>Value</th></tr>
+          <tr><td>Simulation</td><td>Day 0&ndash;485 (manage Day 50&ndash;385)</td></tr>
+          <tr><td>Starting Equipment</td><td>3 stuffers, 2 testers, 1 tuner</td></tr>
+          <tr><td>Starting Inventory</td><td>9,600 kits</td></tr>
+          <tr><td>Starting Cash</td><td>~$0 (invested in equipment + inventory)</td></tr>
+          <tr><td>Order Size</td><td>60 kits per customer order</td></tr>
+          <tr><td>Kit Cost</td><td>$10/kit + $1,000 per shipment</td></tr>
+          <tr><td>Supplier Lead Time</td><td>4 days</td></tr>
+          <tr><td>Cash Interest</td><td>+10%/year compounded daily</td></tr>
+          <tr><td>Debt Interest</td><td>-20%/year compounded daily</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ━━ 2. Factory Flow ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="factory-flow">
+      <div class="section-label">2 &mdash; Factory Flow</div>
+      <div class="card prose-guide">
+        <h3>The 4-Step, 3-Station Pipeline</h3>
+        <p>Every customer order goes through <strong>4 processing steps</strong> at <strong>3 physical stations</strong>. The critical detail: Station 2 is used <em>twice</em>.</p>
+
+        <div class="pipeline my-8">
+          <div class="pipe-node bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <div class="text-[10px] uppercase tracking-wider opacity-60 mb-1">Step 1</div>
+            S1 Stuffing
+          </div>
+          <span class="pipe-arrow">&rarr;</span>
+          <div class="pipe-node bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <div class="text-[10px] uppercase tracking-wider opacity-60 mb-1">Step 2</div>
+            S2 Testing
+          </div>
+          <span class="pipe-arrow">&rarr;</span>
+          <div class="pipe-node bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <div class="text-[10px] uppercase tracking-wider opacity-60 mb-1">Step 3</div>
+            S3 Tuning
+          </div>
+          <span class="pipe-arrow">&rarr;</span>
+          <div class="pipe-node bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <div class="text-[10px] uppercase tracking-wider opacity-60 mb-1">Step 4</div>
+            S2 Re-test
+          </div>
+          <span class="pipe-arrow">&rarr;</span>
+          <div class="pipe-node bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div class="text-[10px] uppercase tracking-wider opacity-60 mb-1">Done</div>
+            Revenue
+          </div>
+        </div>
+
+        <div class="callout callout-warn">
+          <strong>Why S2 is the bottleneck:</strong> Station 2 handles Steps 2 <em>and</em> 4 &mdash; it processes every order <strong>twice</strong>. With only 2 testers at the start, it runs at ~90% utilization while S1 and S3 sit at ~20% and ~78%. Always address S2 first.
+        </div>
+
+        <details class="mt-4">
+          <summary class="text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors py-2">Processing time details</summary>
+          <div class="mt-3 rounded-xl bg-white/[0.02] border border-white/5 p-4">
+            <table class="ref-table">
+              <tr><th>Step</th><th>Station</th><th>Setup (mean)</th><th>Per-kit (mean)</th><th>Total @60 kits</th></tr>
+              <tr><td>1 &mdash; Stuffing</td><td class="text-amber-400">S1</td><td>0.015 days</td><td>0.0010 days</td><td>~0.075 days</td></tr>
+              <tr><td>2 &mdash; Testing</td><td class="text-rose-400">S2</td><td>0.010 days</td><td>0.0014 days</td><td>~0.094 days</td></tr>
+              <tr><td>3 &mdash; Tuning</td><td class="text-blue-400">S3</td><td>0.008 days</td><td>0.0015 days</td><td>~0.098 days</td></tr>
+              <tr><td>4 &mdash; Re-test</td><td class="text-rose-400">S2</td><td>0.010 days</td><td>0.0020 days</td><td>~0.130 days</td></tr>
+            </table>
+            <p class="text-xs text-slate-500 mt-3">Setup times are exponentially distributed. Per-kit times use a Gamma distribution (shape = lot size). Total column shows expected value for a lot of 60.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ━━ 3. Reading Game Data ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="reading-data">
+      <div class="section-label">3 &mdash; Reading Game Data</div>
+      <div class="card prose-guide">
+        <h3>What the Dashboard Shows</h3>
+        <p>When you log in at Day 50, you'll see 50 days of historical data. Here's what to look for:</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
+          <div class="rounded-xl bg-rose-500/5 border border-rose-500/10 p-4">
+            <p class="text-xs font-semibold text-rose-400 uppercase tracking-wider mb-2">Station Utilization</p>
+            <p class="text-sm text-slate-400">Fraction of time machines are busy. Above <strong class="text-rose-300">85%</strong> = expect major queuing delays. Above <strong class="text-rose-300">95%</strong> = severe bottleneck.</p>
+          </div>
+          <div class="rounded-xl bg-blue-500/5 border border-blue-500/10 p-4">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Queue Lengths</p>
+            <p class="text-sm text-slate-400">Jobs waiting at each station. Growing queues confirm the bottleneck. Shrinking queues = excess capacity you might sell.</p>
+          </div>
+          <div class="rounded-xl bg-violet-500/5 border border-violet-500/10 p-4">
+            <p class="text-xs font-semibold text-violet-400 uppercase tracking-wider mb-2">Lead Times</p>
+            <p class="text-sm text-slate-400">Total time from order arrival to completion. Compare against your contract's quoted lead time. Under the quoted time = full revenue.</p>
+          </div>
+          <div class="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+            <p class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Cash &amp; Inventory</p>
+            <p class="text-sm text-slate-400">Track cash to know what you can afford. Watch inventory &mdash; if kits hit zero, orders stall and you earn nothing.</p>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <strong>First thing to do:</strong> Download the Consolidated Daily Data spreadsheet. Calculate the average demand rate (orders/day) and utilization at each station. This tells you exactly where the bottleneck is and how much capacity to add.
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━ 4. Back-Calculating Processing Times ━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="processing-times">
+      <div class="section-label">4 &mdash; Back-Calculating Processing Times</div>
+      <div class="card prose-guide">
+        <h3>The Core Formula</h3>
+        <p>From queuing theory, the utilization of a station is:</p>
+        <div class="my-4 p-4 rounded-xl bg-indigo-500/8 border border-indigo-500/15 text-center">
+          <span class="text-lg font-mono text-indigo-300">&rho; = &lambda; / (s &times; &mu;)</span>
+        </div>
+        <p>Where:</p>
+        <ul class="list-none space-y-1 ml-4 mb-4">
+          <li><code>&rho;</code> = utilization (from dashboard, e.g. 0.90)</li>
+          <li><code>&lambda;</code> = arrival rate (orders per day, e.g. 8)</li>
+          <li><code>s</code> = number of machines at the station</li>
+          <li><code>&mu;</code> = service rate = 1 / (processing time per order)</li>
+        </ul>
+        <p>Rearranging to find <strong>processing time per order</strong>:</p>
+        <div class="my-4 p-4 rounded-xl bg-indigo-500/8 border border-indigo-500/15 text-center">
+          <span class="text-lg font-mono text-indigo-300">Processing Time = &rho; &times; s / &lambda;</span>
+        </div>
+
+        <h3>Worked Example</h3>
+        <p>Suppose from the dashboard you see Station 2 utilization = 0.90, you have 2 testers, and demand is ~8 orders/day:</p>
+        <div class="rounded-xl bg-white/[0.02] border border-white/5 p-4 my-4 font-mono text-sm text-slate-400">
+          Processing Time = 0.90 &times; 2 / 8 = <strong class="text-rose-400">0.225 days per order</strong><br>
+          <span class="text-slate-500">(This is the combined time for Steps 2 + 4 at S2)</span>
+        </div>
+
+        <h3>Interactive Calculator</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Utilization (&rho;)</label>
+            <input id="calc-util" type="number" value="0.90" min="0" max="1" step="0.01" class="input-field" oninput="calcProcTime()">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Machines (s)</label>
+            <input id="calc-machines" type="number" value="2" min="1" max="20" class="input-field" oninput="calcProcTime()">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Arrival Rate (&lambda; orders/day)</label>
+            <input id="calc-arrival" type="number" value="8" min="0.1" max="50" step="0.1" class="input-field" oninput="calcProcTime()">
+          </div>
+        </div>
+        <div id="proc-result" class="calc-result">0.225 days/order</div>
+      </div>
+    </section>
+
+    <!-- ━━ 5. Contracts & Revenue ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="contracts">
+      <div class="section-label">5 &mdash; Contracts &amp; Revenue</div>
+      <div class="card prose-guide">
+        <h3>The Three Contracts</h3>
+        <table class="ref-table my-4">
+          <tr><th>Contract</th><th>Price</th><th>Quoted LT</th><th>Max LT</th><th>Sweet Spot</th></tr>
+          <tr>
+            <td><span class="text-slate-300 font-semibold">C1</span> <span class="text-slate-500">(Default)</span></td>
+            <td class="text-emerald-400 font-semibold">$750</td>
+            <td>7 days</td><td>14 days</td>
+            <td class="text-slate-500">Safe, low reward</td>
+          </tr>
+          <tr>
+            <td><span class="text-slate-300 font-semibold">C2</span></td>
+            <td class="text-emerald-400 font-semibold">$1,000</td>
+            <td>1 day</td><td>2 days</td>
+            <td class="text-slate-500">Best balance of risk/reward</td>
+          </tr>
+          <tr>
+            <td><span class="text-slate-300 font-semibold">C3</span></td>
+            <td class="text-emerald-400 font-semibold">$1,250</td>
+            <td>0.5 days</td><td>1 day</td>
+            <td class="text-slate-500">High reward, needs fast throughput</td>
+          </tr>
+        </table>
+
+        <h3>Revenue Formula</h3>
+        <div class="my-4 p-4 rounded-xl bg-emerald-500/8 border border-emerald-500/15 text-center">
+          <span class="text-lg font-mono text-emerald-300">Revenue = Price &times; max(0, (MaxLT &minus; ActualLT) / (MaxLT &minus; QuotedLT))</span>
+        </div>
+        <p>If your lead time is at or under the quoted time, you earn the full price. If over the max, you earn <strong>$0</strong>. In between, revenue declines linearly.</p>
+
+        <h3>Interactive Revenue Calculator</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Contract</label>
+            <select id="calc-contract" class="input-field" onchange="calcRevenue()">
+              <option value="1">C1 &mdash; $750 / 7-day</option>
+              <option value="2" selected>C2 &mdash; $1,000 / 1-day</option>
+              <option value="3">C3 &mdash; $1,250 / 0.5-day</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Actual Lead Time (days)</label>
+            <input id="calc-lt" type="number" value="0.8" min="0" max="30" step="0.1" class="input-field" oninput="calcRevenue()">
+          </div>
+        </div>
+        <div id="rev-result" class="calc-result">$1,000</div>
+
+        <div class="callout callout-tip mt-6">
+          <strong>Key insight:</strong> Switching from C1 to C2 is a <strong>33% revenue increase</strong> with no additional cost &mdash; as long as your lead times are consistently under 1 day. This is the single biggest lever in the game.
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━ 6. Inventory Management ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="inventory">
+      <div class="section-label">6 &mdash; Inventory Management</div>
+      <div class="card prose-guide">
+        <h3>Reorder Point / Order Quantity Model</h3>
+        <p>The factory uses a simple <strong>ROP/ROQ</strong> inventory system:</p>
+        <ul class="list-none space-y-2 ml-4 mb-4">
+          <li><strong>Reorder Point (ROP):</strong> When inventory drops to this level, a new order is placed</li>
+          <li><strong>Order Quantity (ROQ):</strong> How many kits to order each time</li>
+          <li><strong>Supplier Lead Time:</strong> 4 days from order to delivery</li>
+        </ul>
+
+        <h3>Calculating ROP</h3>
+        <div class="rounded-xl bg-white/[0.02] border border-white/5 p-4 my-4 font-mono text-sm text-slate-400">
+          Daily demand = ~8 orders/day &times; 60 kits = <strong class="text-blue-400">480 kits/day</strong><br>
+          Lead time demand = 480 &times; 4 days = <strong class="text-blue-400">1,920 kits</strong><br>
+          With safety buffer: ROP = <strong class="text-emerald-400">~3,600 kits</strong> (covers ~7.5 days)
+        </div>
+
+        <h3>Costs</h3>
+        <table class="ref-table my-4">
+          <tr><th>Cost</th><th>Amount</th><th>Notes</th></tr>
+          <tr><td>Per kit</td><td class="text-emerald-400">$10</td><td>Multiplied by order quantity</td></tr>
+          <tr><td>Shipping</td><td class="text-emerald-400">$1,000</td><td>Fixed per shipment</td></tr>
+          <tr><td>Holding</td><td class="text-slate-500">~0</td><td>No explicit cost, but cash tied up loses 10%/yr interest</td></tr>
+        </table>
+
+        <div class="callout callout-warn mt-4">
+          <strong>End-game inventory trap:</strong> Leftover kits at Day 485 are worthless. Calculate how many kits you need for the final 100 days (~48,000 kits at ~8 orders/day &times; 60 kits) and set order quantity to <strong>0</strong> once you have enough stockpiled. Every $10 saved earns 10%/yr interest.
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━ 7. Machine Buying Strategy ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="machines">
+      <div class="section-label">7 &mdash; Machine Buying Strategy</div>
+      <div class="card prose-guide">
+        <h3>Machine Costs</h3>
+        <table class="ref-table my-4">
+          <tr><th>Station</th><th>Buy Price</th><th>Sell Price</th><th>Starting Count</th></tr>
+          <tr><td class="text-amber-400">S1 &mdash; Stuffer</td><td>$90,000</td><td>$10,000</td><td>3</td></tr>
+          <tr><td class="text-rose-400">S2 &mdash; Tester</td><td>$80,000</td><td>$10,000</td><td>2</td></tr>
+          <tr><td class="text-blue-400">S3 &mdash; Tuner</td><td>$100,000</td><td>$10,000</td><td>1</td></tr>
+        </table>
+
+        <h3>Decision Framework</h3>
+        <p>Ask these questions in order:</p>
+        <ol class="list-decimal list-inside space-y-2 ml-2 mb-4">
+          <li><strong>Which station has the highest utilization?</strong> &rarr; That's your bottleneck</li>
+          <li><strong>Is utilization &gt; 85%?</strong> &rarr; Buy a machine there</li>
+          <li><strong>Can you afford it?</strong> &rarr; Check cash. Consider a loan if Day 100+</li>
+          <li><strong>Will this let you upgrade contracts?</strong> &rarr; Extra $250/order at C2 pays back an $80K tester in ~40 days</li>
+        </ol>
+
+        <h3>ROI Example</h3>
+        <div class="rounded-xl bg-white/[0.02] border border-white/5 p-4 my-4 font-mono text-sm text-slate-400">
+          Buy 1 extra tester: <strong class="text-rose-400">-$80,000</strong><br>
+          Enables switch C1 &rarr; C2: +$250/order &times; ~8 orders/day = <strong class="text-emerald-400">+$2,000/day</strong><br>
+          Payback period: $80,000 / $2,000 = <strong class="text-indigo-400">~40 days</strong><br>
+          <span class="text-slate-500">With 335 remaining managed days, net gain is massive.</span>
+        </div>
+
+        <div class="callout callout-tip mt-4">
+          <strong>Typical winning config:</strong> 3 stuffers, 3&ndash;4 testers, 1&ndash;2 tuners. Station 2 almost always needs at least 1 extra machine. Don't buy machines you don't need &mdash; the $80K+ cost earns 10%/yr interest if kept as cash.
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━ 8. Using the Simulator ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="simulator">
+      <div class="section-label">8 &mdash; Using the Simulator</div>
+      <div class="card prose-guide">
+        <h3>Step-by-Step Walkthrough</h3>
+        <ol class="list-decimal list-inside space-y-3 ml-2 mb-4">
+          <li>
+            <strong>Set Factory Setup</strong> (left card) &mdash; Enter the starting machines, lot size, and contract. These are the Day 0 defaults.
+          </li>
+          <li>
+            <strong>Set Inventory Policy</strong> (middle card) &mdash; Starting kits, reorder point, and order quantity.
+          </li>
+          <li>
+            <strong>Configure Strategy Timeline</strong> &mdash; This is the key feature. Add rows to schedule actions at specific days:
+            <ul class="list-disc list-inside ml-6 mt-2 space-y-1 text-sm text-slate-400">
+              <li>Buy/sell machines at any station</li>
+              <li>Switch contracts</li>
+              <li>Change lot size, reorder point, or order quantity</li>
+              <li>Toggle Step 4 priority at Station 2</li>
+            </ul>
+          </li>
+          <li>
+            <strong>Choose a Preset</strong> (or build your own) &mdash; Conservative, Balanced, and Aggressive presets are starting points you can customize.
+          </li>
+          <li>
+            <strong>Run Simulation</strong> &mdash; Results show final cash, lead times, utilization charts, and a Day 50 snapshot you can compare with your real game data.
+          </li>
+          <li>
+            <strong>Iterate</strong> &mdash; Tweak your timeline, change seeds to test different demand scenarios, and find the strategy that works best.
+          </li>
+        </ol>
+
+        <div class="my-6 p-5 rounded-xl bg-white/[0.02] border border-white/5">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Simulator Workflow</p>
+          <div class="flex flex-col sm:flex-row items-center gap-3 text-center text-sm">
+            <div class="px-4 py-3 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium w-full sm:w-auto">Configure</div>
+            <span class="text-slate-600 hidden sm:block">&rarr;</span>
+            <span class="text-slate-600 sm:hidden">&darr;</span>
+            <div class="px-4 py-3 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 font-medium w-full sm:w-auto">Add Actions</div>
+            <span class="text-slate-600 hidden sm:block">&rarr;</span>
+            <span class="text-slate-600 sm:hidden">&darr;</span>
+            <div class="px-4 py-3 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium w-full sm:w-auto">Run</div>
+            <span class="text-slate-600 hidden sm:block">&rarr;</span>
+            <span class="text-slate-600 sm:hidden">&darr;</span>
+            <div class="px-4 py-3 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium w-full sm:w-auto">Analyze</div>
+            <span class="text-slate-600 hidden sm:block">&rarr;</span>
+            <span class="text-slate-600 sm:hidden">&darr;</span>
+            <div class="px-4 py-3 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium w-full sm:w-auto">Iterate</div>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <strong>Pro tip:</strong> Use the <strong>Day 50 Snapshot</strong> in simulation results to compare against your real game dashboard. If the numbers match closely, you can trust the simulator's predictions for the rest of the game.
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━ 9. Recommended Timeline ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section id="timeline">
+      <div class="section-label">9 &mdash; Recommended Timeline</div>
+      <div class="card prose-guide">
+        <h3>4-Phase Strategy</h3>
+
+        <!-- Visual phase bar -->
+        <div class="phase-bar my-6">
+          <div class="bg-indigo-500/20 text-indigo-300 border-r border-indigo-500/30" style="flex:1">
+            <span class="hidden sm:inline">1. </span>Observe
+          </div>
+          <div class="bg-rose-500/20 text-rose-300 border-r border-rose-500/30" style="flex:2">
+            <span class="hidden sm:inline">2. </span>Upgrade
+          </div>
+          <div class="bg-violet-500/20 text-violet-300 border-r border-violet-500/30" style="flex:4">
+            <span class="hidden sm:inline">3. </span>Fine-tune
+          </div>
+          <div class="bg-emerald-500/20 text-emerald-300" style="flex:1">
+            <span class="hidden sm:inline">4. </span>End-game
+          </div>
+        </div>
+        <div class="flex justify-between text-[10px] text-slate-600 uppercase tracking-wider mb-6 px-1">
+          <span>Day 50</span><span>Day 90</span><span>Day 150</span><span>Day 350</span><span>Day 385</span>
+        </div>
+
+        <!-- Phase 1 -->
+        <div class="mb-6">
+          <h3 class="flex items-center gap-2"><span class="w-6 h-6 rounded-md bg-indigo-500/15 text-indigo-400 flex items-center justify-center text-xs font-bold">1</span> Observe (Day 50&ndash;60)</h3>
+          <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
+            <li>Download data, calculate demand rate and utilization</li>
+            <li>Identify bottleneck (almost always S2)</li>
+            <li>Buy 1 tester immediately if cash allows</li>
+            <li>Adjust ROP to ~3,600 kits</li>
+            <li>Keep Contract 1 for now</li>
+          </ul>
+        </div>
+
+        <!-- Phase 2 -->
+        <div class="mb-6">
+          <h3 class="flex items-center gap-2"><span class="w-6 h-6 rounded-md bg-rose-500/15 text-rose-400 flex items-center justify-center text-xs font-bold">2</span> Upgrade (Day 60&ndash;150)</h3>
+          <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
+            <li>Buy additional machines as cash allows (prioritize S2)</li>
+            <li>Switch to Contract 2 when lead times are consistently &lt; 1 day</li>
+            <li>Consider Contract 3 if lead times are &lt; 0.5 days</li>
+            <li>Consider a loan (Day 100+) if it enables a profitable machine purchase</li>
+          </ul>
+        </div>
+
+        <!-- Phase 3 -->
+        <div class="mb-6">
+          <h3 class="flex items-center gap-2"><span class="w-6 h-6 rounded-md bg-violet-500/15 text-violet-400 flex items-center justify-center text-xs font-bold">3</span> Fine-tune (Day 150&ndash;350)</h3>
+          <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
+            <li>Monitor and adjust &mdash; buy machines only if utilization creeps above 85%</li>
+            <li>Experiment with lot sizes and S2 scheduling priority</li>
+            <li>Pay down any loans with excess cash</li>
+            <li>Let cash accumulate and earn 10%/yr interest</li>
+          </ul>
+        </div>
+
+        <!-- Phase 4 -->
+        <div class="mb-6">
+          <h3 class="flex items-center gap-2"><span class="w-6 h-6 rounded-md bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xs font-bold">4</span> End-game (Day 350&ndash;385)</h3>
+          <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
+            <li>Calculate kits needed for Day 385&ndash;485 (~48,000 at 8 orders/day)</li>
+            <li>Set order quantity to 0 once you have enough stock</li>
+            <li>Pay off all remaining debt</li>
+            <li>Leave the best contract and settings for the 100-day autopilot</li>
+            <li>Do NOT sell machines &mdash; lost revenue almost always exceeds $10K sell price</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-warn">
+          <strong>Common mistakes:</strong> Switching contracts too early (earn $0 instead of $750), ordering too much inventory near the end (worthless at Day 485), and ignoring S2's double duty (it needs proportionally more machines than other stations).
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 mt-16">
+    <div class="max-w-4xl mx-auto px-6 py-8 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-xs text-slate-600">
+        <div class="w-5 h-5 rounded bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+          <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+        </div>
+        Littlefield Technologies Simulator
+      </div>
+      <p class="text-[11px] text-slate-700">Yale MGT 422 &middot; Operations Engine</p>
+    </div>
+  </footer>
+
+<script>
+/* ━━ Processing Time Calculator ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function calcProcTime() {
+  const rho = parseFloat(document.getElementById('calc-util').value) || 0;
+  const s = parseFloat(document.getElementById('calc-machines').value) || 1;
+  const lambda = parseFloat(document.getElementById('calc-arrival').value) || 1;
+  const procTime = (rho * s) / lambda;
+  document.getElementById('proc-result').textContent =
+    isFinite(procTime) ? procTime.toFixed(4) + ' days/order' : '—';
+}
+
+/* ━━ Revenue Calculator ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const CONTRACTS = {
+  1: { price: 750,  quoted: 7.0, max: 14.0 },
+  2: { price: 1000, quoted: 1.0, max: 2.0  },
+  3: { price: 1250, quoted: 0.5, max: 1.0  },
+};
+
+function calcRevenue() {
+  const cid = parseInt(document.getElementById('calc-contract').value);
+  const lt = parseFloat(document.getElementById('calc-lt').value) || 0;
+  const c = CONTRACTS[cid];
+  const span = c.max - c.quoted;
+  let rev;
+  if (lt <= c.quoted) {
+    rev = c.price;
+  } else if (span <= 0) {
+    rev = lt <= c.quoted ? c.price : 0;
+  } else {
+    rev = c.price * Math.max(0, Math.min(1, (c.max - lt) / span));
+  }
+  document.getElementById('rev-result').textContent = '$' + Math.round(rev).toLocaleString();
+}
+
+/* ━━ Init ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+calcProcTime();
+calcRevenue();
+</script>
+</body>
+</html>
