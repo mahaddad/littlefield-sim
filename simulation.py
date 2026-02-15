@@ -21,14 +21,14 @@ CONTRACTS = {
 STEP_STATION = [0, 1, 2, 1]          # step index  →  station index
 
 STEP_PARAMS = [                       # (setup_mean, per_kit_mean) in days
-    (0.015, 0.0010),                  # Step 0  Stuffing   @ Station 0
-    (0.010, 0.0014),                  # Step 1  Testing    @ Station 1
-    (0.008, 0.0015),                  # Step 2  Tuning     @ Station 2
-    (0.010, 0.0020),                  # Step 3  Re-test    @ Station 1
+    (0.020, 0.00333),                 # Step 0  Stuffing   @ S0  → 0.220 days/lot
+    (0.006, 0.00048),                 # Step 1  Testing    @ S1  → 0.035 days/lot
+    (0.008, 0.00110),                 # Step 2  Tuning     @ S2  → 0.074 days/lot
+    (0.006, 0.00062),                 # Step 3  Re-test    @ S1  → 0.043 days/lot
 ]
-# Calibrated for ~8 orders/day (interarrival 0.125 days, lot 60):
-#   S1(3): ~20%  |  S2(2): ~90% BOTTLENECK  |  S3(1): ~78%
-#   Total processing ≈ 0.40 days → Contract 3 feasible with enough capacity
+# Calibrated from 50 days of real game data (12.2 orders/day, lot 60):
+#   S1(3): 89%  |  S2(2): 48%  |  S3(1): 90%
+#   Bottlenecks are S1 and S3, NOT S2
 
 MACHINE_COST = [90_000, 80_000, 100_000]   # buy price per station
 MACHINE_SELL = 10_000                       # sell price (any station)
@@ -77,7 +77,7 @@ class Simulation:
         self.start_day   = cfg.get("start_day", 0)
         self.initial_cash = cfg.get("initial_cash", 0.0)
         self.lot_size    = cfg.get("lot_size", 60)
-        self.arrival_mean = cfg.get("interarrival_mean", 0.125)
+        self.arrival_mean = cfg.get("interarrival_mean", 0.082)
 
         self.machines = [
             cfg.get("stuffers", 3),

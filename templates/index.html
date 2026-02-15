@@ -571,11 +571,11 @@
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1.5">Reorder Point</label>
-              <input id="reorder_point" type="number" value="1800" min="0" max="50000" class="input-field" oninput="updateFinalState()">
+              <input id="reorder_point" type="number" value="4200" min="0" max="50000" class="input-field" oninput="updateFinalState()">
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1.5">Order Quantity</label>
-              <input id="order_quantity" type="number" value="3600" min="0" max="50000" class="input-field" oninput="updateFinalState()">
+              <input id="order_quantity" type="number" value="7200" min="0" max="50000" class="input-field" oninput="updateFinalState()">
               <p class="text-[11px] text-slate-500 mt-1">0 = stop ordering</p>
             </div>
           </div>
@@ -608,8 +608,8 @@
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1.5">Interarrival (days)</label>
-              <input id="interarrival_mean" type="number" value="0.125" min="0.05" max="2" step="0.01" class="input-field">
-              <p class="text-[11px] text-slate-500 mt-1">0.125 = ~8/day</p>
+              <input id="interarrival_mean" type="number" value="0.0833" min="0.01" max="2" step="0.001" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">0.0833 = ~12/day</p>
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1.5">Random Seed</label>
@@ -844,27 +844,20 @@
 
 const PRESETS = {
   conservative: [
-    { day: 55,  action: "buy_tester",          value: 1 },
-    { day: 60,  action: "set_reorder_point",    value: 3600 },
-    { day: 60,  action: "set_order_quantity",    value: 5400 },
+    { day: 55,  action: "buy_tuner",             value: 1 },
     { day: 120, action: "set_contract",          value: 2 },
   ],
   balanced: [
-    { day: 55,  action: "buy_tester",            value: 1 },
     { day: 55,  action: "buy_tuner",              value: 1 },
-    { day: 60,  action: "set_reorder_point",      value: 3600 },
-    { day: 60,  action: "set_order_quantity",      value: 5400 },
+    { day: 75,  action: "buy_stuffer",            value: 1 },
     { day: 90,  action: "set_contract",            value: 2 },
   ],
   aggressive: [
-    { day: 55,  action: "buy_tester",              value: 1 },
-    { day: 60,  action: "set_reorder_point",        value: 3600 },
-    { day: 60,  action: "set_order_quantity",        value: 5400 },
-    { day: 75,  action: "buy_tester",              value: 1 },
-    { day: 80,  action: "set_contract",              value: 2 },
-    { day: 100, action: "buy_tuner",                value: 1 },
-    { day: 120, action: "set_contract",              value: 3 },
-    { day: 120, action: "set_priority_step4",        value: 1 },
+    { day: 55,  action: "buy_tuner",              value: 1 },
+    { day: 60,  action: "buy_stuffer",            value: 1 },
+    { day: 80,  action: "set_contract",            value: 2 },
+    { day: 100, action: "buy_tuner",              value: 1 },
+    { day: 120, action: "set_contract",            value: 3 },
   ],
 };
 
