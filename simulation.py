@@ -91,6 +91,7 @@ class Simulation:
         self.roq          = cfg.get("order_quantity", 3600)
         self.pending_kits = False
         self.prio_step4   = cfg.get("priority_step4", False)
+        self.defer_buys   = cfg.get("defer_buys", False)
 
         self.timeline = sorted(cfg.get("timeline", []), key=lambda a: a["day"])
 
@@ -164,21 +165,37 @@ class Simulation:
                 affordable = max(0, int(available // MACHINE_COST[idx])) if MACHINE_COST[idx] > 0 else 0
                 requested = n
                 n = min(n, affordable)
+                orig_day = a.get("_deferred_from")
+                name = ["stuffer", "tester", "tuner"][idx]
                 if n < requested:
-                    name = ["stuffer", "tester", "tuner"][idx]
-                    if n == 0:
-                        self.warnings.append(
-                            f"Day {int(self.t)}: Could not buy {requested} {name}(s) — "
-                            f"need ${MACHINE_COST[idx]*requested + kit_reserve:,.0f} "
-                            f"(incl. ${kit_reserve:,.0f} kit reserve), "
-                            f"have ${self.cash:,.0f}")
+                    remaining = requested - n
+                    if self.defer_buys:
+                        next_day = int(self.t) + 1
+                        if next_day <= self.end_day:
+                            self.timeline.append({
+                                "day": next_day, "action": act,
+                                "value": remaining,
+                                "_deferred_from": orig_day or int(self.t),
+                            })
+                            self.timeline.sort(key=lambda x: x["day"])
                     else:
-                        self.warnings.append(
-                            f"Day {int(self.t)}: Could only buy {n}/{requested} {name}(s) — "
-                            f"insufficient cash for the rest")
+                        if n == 0:
+                            self.warnings.append(
+                                f"Day {int(self.t)}: Could not buy {remaining} {name}(s) — "
+                                f"need ${MACHINE_COST[idx]*remaining + kit_reserve:,.0f} "
+                                f"(incl. ${kit_reserve:,.0f} kit reserve), "
+                                f"have ${self.cash:,.0f}")
+                        else:
+                            self.warnings.append(
+                                f"Day {int(self.t)}: Could only buy {n}/{requested} {name}(s) — "
+                                f"insufficient cash for the rest")
                 if n > 0:
                     self.machines[idx] += n
                     self.cash -= MACHINE_COST[idx] * n
+                    if orig_day is not None:
+                        self.warnings.append(
+                            f"Day {int(self.t)}: Bought {n} {name}(s) "
+                            f"(deferred from Day {orig_day})")
             elif act in ("sell_stuffer", "sell_tester", "sell_tuner"):
                 idx = {"sell_stuffer": 0, "sell_tester": 1, "sell_tuner": 2}[act]
                 name = ["stuffer", "tester", "tuner"][idx]

@@ -434,6 +434,10 @@
             <button onclick="loadPreset('clear', this)" class="preset-btn" style="color:#f43f5e; border-color: rgba(244,63,94,0.15);">Clear</button>
           </div>
         </div>
+        <div class="flex items-center gap-2.5 mb-4">
+          <input id="defer_buys" type="checkbox" class="checkbox-custom">
+          <label for="defer_buys" class="text-xs text-slate-400 cursor-pointer">Retry failed purchases daily until affordable</label>
+        </div>
 
         <!-- Timeline header (hidden on mobile since layout changes) -->
         <div class="hidden sm:grid grid-cols-[80px_1fr_100px_40px] gap-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider pb-2 border-b border-white/5 mb-1">
@@ -746,6 +750,7 @@ function getConfig() {
     stuffers: n("stuffers"), testers: n("testers"), tuners: n("tuners"),
     lot_size: n("lot_size"), contract: n("contract"),
     priority_step4: document.getElementById("priority_step4").checked,
+    defer_buys: document.getElementById("defer_buys").checked,
     initial_inventory: n("initial_inventory"),
     reorder_point: n("reorder_point"), order_quantity: n("order_quantity"),
     end_day: n("end_day"), interarrival_mean: Number(document.getElementById("interarrival_mean").value),
