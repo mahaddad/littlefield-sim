@@ -275,7 +275,7 @@
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <div id="hints-toggle" class="hints-toggle active" onclick="toggleHints()" title="Show or hide strategy hints">
+          <div id="hints-toggle" class="hints-toggle" onclick="toggleHints()" title="Show or hide strategy hints">
             <span class="hints-toggle-label">Hints</span>
             <div class="hints-toggle-track"><div class="hints-toggle-thumb"></div></div>
           </div>
@@ -839,10 +839,10 @@ function calcRevenue() {
 
 function getHintsState() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('hints') === 'off') return false;
+  if (params.get('hints') === 'on') return true;
   const stored = localStorage.getItem('hints');
-  if (stored !== null) return stored !== 'off';
-  return true;  // default: hints on
+  if (stored !== null) return stored === 'on';
+  return false;  // default: hints off
 }
 
 function applyHints(on) {
