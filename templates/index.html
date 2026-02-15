@@ -268,6 +268,64 @@
       to   { box-shadow: 0 0 20px rgba(99,102,241,0.5), 0 0 40px rgba(99,102,241,0.15); }
     }
 
+    /* ━━ Hints Toggle ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    .hints-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .hints-toggle-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+      transition: color 0.2s;
+    }
+    .hints-toggle-track {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .hints-toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #64748b;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .hints-toggle.active .hints-toggle-track {
+      background: rgba(99,102,241,0.25);
+      border-color: rgba(99,102,241,0.4);
+    }
+    .hints-toggle.active .hints-toggle-thumb {
+      transform: translateX(16px);
+      background: #818cf8;
+    }
+    .hints-toggle.active .hints-toggle-label {
+      color: #a5b4fc;
+    }
+
+    .hints-banner {
+      display: none;
+      text-align: center;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #94a3b8;
+      background: rgba(99,102,241,0.06);
+      border: 1px solid rgba(99,102,241,0.1);
+      border-radius: 10px;
+    }
+    body.hints-hidden .hints-banner { display: block; }
+    body.hints-hidden [data-hint] { display: none !important; }
+
     /* ━━ Disclaimer Modal ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
     .disclaimer-overlay {
       position: fixed;
@@ -339,6 +397,7 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
       background-size: 200% 100%;
       animation: shimmer 2s linear infinite;
+      pointer-events: none;
     }
     .disclaimer-link {
       color: #818cf8;
@@ -369,10 +428,16 @@
             <p class="text-sm text-indigo-300/70">Discrete-Event Factory Simulator</p>
           </div>
         </div>
-        <a id="guide-btn" href="/guide" onclick="localStorage.setItem('guide_seen','true')" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-300 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all backdrop-blur-sm">
-          <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-          How to Play
-        </a>
+        <div class="flex items-center gap-3">
+          <div id="hints-toggle" class="hints-toggle" onclick="toggleHints()" title="Show or hide strategy hints">
+            <span class="hints-toggle-label">Hints</span>
+            <div class="hints-toggle-track"><div class="hints-toggle-thumb"></div></div>
+          </div>
+          <a id="guide-btn" href="/guide" onclick="localStorage.setItem('guide_seen','true')" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-300 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all backdrop-blur-sm">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            How to Play
+          </a>
+        </div>
       </div>
 
       <!-- Factory flow diagram -->
@@ -401,6 +466,8 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-10">
+
+    <div class="hints-banner">Strategy hints are hidden. Toggle above to show.</div>
 
     <!-- ━━ Fixed Costs & Rules ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <details class="rounded-2xl bg-white/[0.02] border border-white/5 px-6 py-3 group">
@@ -561,9 +628,9 @@
         <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
           <p class="text-xs text-slate-500">Schedule actions during your management window <span class="text-slate-600">(Day 50 &ndash; 385)</span> &middot; <a href="/guide#action-failures" class="text-indigo-400/70 hover:text-indigo-300 transition-colors">Some actions can fail &rarr;</a></p>
           <div class="flex flex-wrap gap-2" id="preset-btns">
-            <button onclick="loadPreset('conservative', this)" class="preset-btn">Conservative</button>
-            <button onclick="loadPreset('balanced', this)" class="preset-btn active" id="preset-balanced">Balanced</button>
-            <button onclick="loadPreset('aggressive', this)" class="preset-btn">Aggressive</button>
+            <button onclick="loadPreset('conservative', this)" class="preset-btn" data-hint>Conservative</button>
+            <button onclick="loadPreset('balanced', this)" class="preset-btn active" id="preset-balanced" data-hint>Balanced</button>
+            <button onclick="loadPreset('aggressive', this)" class="preset-btn" data-hint>Aggressive</button>
             <button onclick="loadPreset('clear', this)" class="preset-btn" style="color:#f43f5e; border-color: rgba(244,63,94,0.15);">Clear</button>
           </div>
         </div>
@@ -585,19 +652,21 @@
       </div>
 
       <!-- Final State -->
-      <div class="section-label mt-8">Planned State <span class="ml-2 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400/70 text-[10px] font-semibold tracking-normal normal-case">Day 385</span> <span class="ml-1 text-[10px] font-normal normal-case tracking-normal text-slate-600">assumes all actions succeed</span></div>
-      <div id="final-state" class="rounded-2xl bg-white/[0.02] border border-white/5 px-6 py-4">
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px]">
-          <span class="text-slate-500">S1 <span id="fs-s1" class="text-amber-400/80 font-semibold">3</span></span>
-          <span class="text-slate-500">S2 <span id="fs-s2" class="text-rose-400/80 font-semibold">2</span></span>
-          <span class="text-slate-500">S3 <span id="fs-s3" class="text-blue-400/80 font-semibold">1</span></span>
-          <span class="text-slate-600">&middot;</span>
-          <span class="text-slate-500">Contract <span id="fs-contract" class="text-slate-300 font-semibold">C1</span></span>
-          <span class="text-slate-500">Lot <span id="fs-lot" class="text-slate-300 font-semibold">60</span></span>
-          <span class="text-slate-500">Priority S4 <span id="fs-prio" class="text-slate-300 font-semibold">Off</span></span>
-          <span class="text-slate-600">&middot;</span>
-          <span class="text-slate-500">ROP <span id="fs-rop" class="text-slate-300 font-semibold">1800</span></span>
-          <span class="text-slate-500">ROQ <span id="fs-roq" class="text-slate-300 font-semibold">3600</span></span>
+      <div data-hint>
+        <div class="section-label mt-8">Planned State <span class="ml-2 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400/70 text-[10px] font-semibold tracking-normal normal-case">Day 385</span> <span class="ml-1 text-[10px] font-normal normal-case tracking-normal text-slate-600">assumes all actions succeed</span></div>
+        <div id="final-state" class="rounded-2xl bg-white/[0.02] border border-white/5 px-6 py-4">
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px]">
+            <span class="text-slate-500">S1 <span id="fs-s1" class="text-amber-400/80 font-semibold">3</span></span>
+            <span class="text-slate-500">S2 <span id="fs-s2" class="text-rose-400/80 font-semibold">2</span></span>
+            <span class="text-slate-500">S3 <span id="fs-s3" class="text-blue-400/80 font-semibold">1</span></span>
+            <span class="text-slate-600">&middot;</span>
+            <span class="text-slate-500">Contract <span id="fs-contract" class="text-slate-300 font-semibold">C1</span></span>
+            <span class="text-slate-500">Lot <span id="fs-lot" class="text-slate-300 font-semibold">60</span></span>
+            <span class="text-slate-500">Priority S4 <span id="fs-prio" class="text-slate-300 font-semibold">Off</span></span>
+            <span class="text-slate-600">&middot;</span>
+            <span class="text-slate-500">ROP <span id="fs-rop" class="text-slate-300 font-semibold">1800</span></span>
+            <span class="text-slate-500">ROQ <span id="fs-roq" class="text-slate-300 font-semibold">3600</span></span>
+          </div>
         </div>
       </div>
     </div>
@@ -750,8 +819,10 @@
         </div>
         Littlefield Technologies Simulator
       </div>
-      <p class="text-[11px] text-slate-700">Yale MGT 422 &middot; Operations Engine</p>
-      <p class="text-[11px] text-slate-700 mt-1">Built with AI &middot; <a href="https://github.com/mahaddad/littlefield-sim" class="disclaimer-link">View on GitHub</a></p>
+      <div class="text-right">
+        <p class="text-[11px] text-slate-700">Yale MGT 422 &middot; Operations Engine</p>
+        <p class="text-[11px] text-slate-700 mt-1">Built with AI &middot; <a href="https://github.com/mahaddad/littlefield-sim" class="disclaimer-link">View on GitHub</a></p>
+      </div>
     </div>
   </footer>
 
@@ -1258,6 +1329,35 @@ function dismissDisclaimer() {
     document.getElementById('disclaimer-overlay').classList.add('hidden');
   }
 })();
+
+/* ━━ Hints Toggle ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function getHintsState() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('hints') === 'on') return true;
+  const stored = localStorage.getItem('hints');
+  if (stored !== null) return stored === 'on';
+  return false;  // default: hints off
+}
+
+function applyHints(on) {
+  const toggle = document.getElementById('hints-toggle');
+  if (on) {
+    document.body.classList.remove('hints-hidden');
+    toggle.classList.add('active');
+  } else {
+    document.body.classList.add('hints-hidden');
+    toggle.classList.remove('active');
+  }
+}
+
+function toggleHints() {
+  const isOn = document.body.classList.contains('hints-hidden');
+  localStorage.setItem('hints', isOn ? 'on' : 'off');
+  applyHints(isOn);
+}
+
+applyHints(getHintsState());
 
 /* ━━ Init ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 loadPreset("balanced", document.getElementById("preset-balanced"));
