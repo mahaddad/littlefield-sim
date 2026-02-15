@@ -176,6 +176,64 @@
     details summary::before { content: '\25B6'; display: inline-block; margin-right: 8px; font-size: 10px; transition: transform 0.2s; color: #64748b; }
     details[open] summary::before { transform: rotate(90deg); }
 
+    /* ━━ Hints Toggle ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    .hints-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .hints-toggle-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+      transition: color 0.2s;
+    }
+    .hints-toggle-track {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .hints-toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #64748b;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .hints-toggle.active .hints-toggle-track {
+      background: rgba(99,102,241,0.25);
+      border-color: rgba(99,102,241,0.4);
+    }
+    .hints-toggle.active .hints-toggle-thumb {
+      transform: translateX(16px);
+      background: #818cf8;
+    }
+    .hints-toggle.active .hints-toggle-label {
+      color: #a5b4fc;
+    }
+
+    .hints-banner {
+      display: none;
+      text-align: center;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #94a3b8;
+      background: rgba(99,102,241,0.06);
+      border: 1px solid rgba(99,102,241,0.1);
+      border-radius: 10px;
+    }
+    body.hints-hidden .hints-banner { display: block; }
+    body.hints-hidden [data-hint] { display: none !important; }
+
     /* Quick-ref table */
     .ref-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .ref-table th { text-align: left; padding: 8px 12px; color: #94a3b8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.08); }
@@ -216,10 +274,16 @@
             <p class="text-sm text-indigo-300/70">Littlefield Technologies Guide</p>
           </div>
         </div>
-        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-300 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all backdrop-blur-sm">
-          <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          Open Simulator
-        </a>
+        <div class="flex items-center gap-3">
+          <div id="hints-toggle" class="hints-toggle active" onclick="toggleHints()" title="Show or hide strategy hints">
+            <span class="hints-toggle-label">Hints</span>
+            <div class="hints-toggle-track"><div class="hints-toggle-thumb"></div></div>
+          </div>
+          <a href="/" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-300 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all backdrop-blur-sm">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Open Simulator
+          </a>
+        </div>
       </div>
     </div>
   </header>
@@ -230,6 +294,8 @@
     <div class="callout" style="background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04)); border: 1px solid rgba(99,102,241,0.15); color: #c7d2fe;">
       <strong style="color: #e2e8f0;">About this tool</strong> &mdash; This simulator was developed as an AI-assisted educational tool to complement the Littlefield Technologies exercise. It is designed to help you develop deeper intuition about operations management through interactive experimentation &mdash; not to replace the analytical thinking required by the assignment. What matters most is the understanding you build along the way. <a href="https://github.com/mahaddad/littlefield-sim" style="color: #818cf8;">View source on GitHub</a>
     </div>
+
+    <div class="hints-banner">Strategy hints are hidden. Toggle above to show.</div>
 
     <!-- ━━ Table of Contents ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div>
@@ -243,8 +309,15 @@
         <a href="#inventory" class="toc-link"><span class="toc-num bg-violet-500/15 text-violet-400">6</span> Inventory Management</a>
         <a href="#machines" class="toc-link"><span class="toc-num bg-orange-500/15 text-orange-400">7</span> Machine Buying Strategy</a>
         <a href="#simulator" class="toc-link"><span class="toc-num bg-cyan-500/15 text-cyan-400">8</span> Using the Simulator</a>
-        <a href="#timeline" class="toc-link"><span class="toc-num bg-pink-500/15 text-pink-400">9</span> Recommended Timeline</a>
+        <a href="#timeline" class="toc-link" data-hint><span class="toc-num bg-pink-500/15 text-pink-400">9</span> Recommended Timeline</a>
       </div>
+    </div>
+
+    <!-- ━━ About This Tool ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="callout" style="background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04)); border: 1px solid rgba(99,102,241,0.15); color: #c7d2fe;">
+      <p style="margin-bottom: 8px;"><strong style="color: #e2e8f0;">About This Tool</strong></p>
+      <p style="margin-bottom: 8px;">This simulator was developed as an AI-assisted educational tool to complement the Littlefield Technologies exercise in MGT 422. It is designed to help you develop deeper intuition about operations management concepts through interactive experimentation. Use it to test hypotheses and explore trade-offs &mdash; not as a substitute for the analytical thinking the assignment requires.</p>
+      <p style="margin-bottom: 0; font-size: 12px; color: #94a3b8;">Built with AI in collaboration with Claude &mdash; <a href="https://github.com/mahaddad/littlefield-sim" target="_blank" rel="noopener" style="color: #818cf8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#a5b4fc'" onmouseout="this.style.color='#818cf8'">view the source on GitHub</a></p>
     </div>
 
     <!-- ━━ 1. The Game ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
@@ -455,7 +528,7 @@
         </div>
         <div id="rev-result" class="calc-result">$1,000</div>
 
-        <div class="callout callout-tip mt-6">
+        <div class="callout callout-tip mt-6" data-hint>
           <strong>Key insight:</strong> Switching from C1 to C2 is a <strong>33% revenue increase</strong> with no additional cost &mdash; as long as your lead times are consistently under 1 day. This is the single biggest lever in the game.
         </div>
       </div>
@@ -515,15 +588,17 @@
           <li><strong>Will this let you upgrade contracts?</strong> &rarr; Extra $250/order at C2 pays back an $80K tester in ~40 days</li>
         </ol>
 
-        <h3>ROI Example</h3>
-        <div class="rounded-xl bg-white/[0.02] border border-white/5 p-4 my-4 font-mono text-sm text-slate-400">
-          Buy 1 extra tester: <strong class="text-rose-400">-$80,000</strong><br>
-          Enables switch C1 &rarr; C2: +$250/order &times; ~8 orders/day = <strong class="text-emerald-400">+$2,000/day</strong><br>
-          Payback period: $80,000 / $2,000 = <strong class="text-indigo-400">~40 days</strong><br>
-          <span class="text-slate-500">With 335 remaining managed days, net gain is massive.</span>
+        <div data-hint>
+          <h3>ROI Example</h3>
+          <div class="rounded-xl bg-white/[0.02] border border-white/5 p-4 my-4 font-mono text-sm text-slate-400">
+            Buy 1 extra tester: <strong class="text-rose-400">-$80,000</strong><br>
+            Enables switch C1 &rarr; C2: +$250/order &times; ~8 orders/day = <strong class="text-emerald-400">+$2,000/day</strong><br>
+            Payback period: $80,000 / $2,000 = <strong class="text-indigo-400">~40 days</strong><br>
+            <span class="text-slate-500">With 335 remaining managed days, net gain is massive.</span>
+          </div>
         </div>
 
-        <div class="callout callout-tip mt-4">
+        <div class="callout callout-tip mt-4" data-hint>
           <strong>Typical winning config:</strong> 3 stuffers, 3&ndash;4 testers, 1&ndash;2 tuners. Station 2 almost always needs at least 1 extra machine. Don't buy machines you don't need &mdash; the $80K+ cost earns 10%/yr interest if kept as cash.
         </div>
       </div>
@@ -632,7 +707,7 @@
     </section>
 
     <!-- ━━ 9. Recommended Timeline ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-    <section id="timeline">
+    <section id="timeline" data-hint>
       <div class="section-label">9 &mdash; Recommended Timeline</div>
       <div class="card prose-guide">
         <h3>4-Phase Strategy</h3>
@@ -719,8 +794,10 @@
         </div>
         Littlefield Technologies Simulator
       </div>
-      <p class="text-[11px] text-slate-700">Yale MGT 422 &middot; Operations Engine</p>
-      <p class="text-[11px] text-slate-700 mt-1">Built with AI &middot; <a href="https://github.com/mahaddad/littlefield-sim" style="color: #818cf8; text-decoration: none;">View on GitHub</a></p>
+      <div class="text-right">
+        <p class="text-[11px] text-slate-700">Yale MGT 422 &middot; Operations Engine</p>
+        <p class="text-[11px] text-slate-700 mt-1">Built with AI &middot; <a href="https://github.com/mahaddad/littlefield-sim" style="color: #818cf8; text-decoration: none;">View on GitHub</a></p>
+      </div>
     </div>
   </footer>
 
@@ -757,6 +834,35 @@ function calcRevenue() {
   }
   document.getElementById('rev-result').textContent = '$' + Math.round(rev).toLocaleString();
 }
+
+/* ━━ Hints Toggle ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function getHintsState() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('hints') === 'off') return false;
+  const stored = localStorage.getItem('hints');
+  if (stored !== null) return stored !== 'off';
+  return true;  // default: hints on
+}
+
+function applyHints(on) {
+  const toggle = document.getElementById('hints-toggle');
+  if (on) {
+    document.body.classList.remove('hints-hidden');
+    toggle.classList.add('active');
+  } else {
+    document.body.classList.add('hints-hidden');
+    toggle.classList.remove('active');
+  }
+}
+
+function toggleHints() {
+  const isOn = document.body.classList.contains('hints-hidden');
+  localStorage.setItem('hints', isOn ? 'on' : 'off');
+  applyHints(isOn);
+}
+
+applyHints(getHintsState());
 
 /* ━━ Init ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 calcProcTime();
