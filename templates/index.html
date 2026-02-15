@@ -267,6 +267,85 @@
       from { box-shadow: 0 0 8px rgba(99,102,241,0.2); }
       to   { box-shadow: 0 0 20px rgba(99,102,241,0.5), 0 0 40px rgba(99,102,241,0.15); }
     }
+
+    /* ━━ Disclaimer Modal ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    .disclaimer-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      animation: fadeIn 0.3s ease-out;
+    }
+    .disclaimer-overlay.hidden { display: none; }
+    .disclaimer-card {
+      background: rgba(18, 18, 26, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 20px;
+      padding: 40px 36px 32px;
+      max-width: 540px;
+      width: 90%;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(99, 102, 241, 0.08);
+      animation: slideUp 0.4s ease-out;
+    }
+    .disclaimer-card h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #f1f5f9;
+      margin-bottom: 20px;
+      letter-spacing: -0.01em;
+    }
+    .disclaimer-card p {
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+    .disclaimer-card p:last-of-type { margin-bottom: 0; }
+    .disclaimer-card .accent-line {
+      width: 48px;
+      height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      margin-bottom: 20px;
+    }
+    .disclaimer-btn {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 14px 40px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+    }
+    .disclaimer-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99, 102, 241, 0.4); }
+    .disclaimer-btn:active { transform: translateY(0); }
+    .disclaimer-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+    }
+    .disclaimer-link {
+      color: #818cf8;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .disclaimer-link:hover { color: #a5b4fc; }
   </style>
 </head>
 <body class="min-h-screen text-slate-300">
@@ -672,8 +751,22 @@
         Littlefield Technologies Simulator
       </div>
       <p class="text-[11px] text-slate-700">Yale MGT 422 &middot; Operations Engine</p>
+      <p class="text-[11px] text-slate-700 mt-1">Built with AI &middot; <a href="https://github.com/mahaddad/littlefield-sim" class="disclaimer-link">View on GitHub</a></p>
     </div>
   </footer>
+
+  <!-- Disclaimer Modal -->
+  <div id="disclaimer-overlay" class="disclaimer-overlay">
+    <div class="disclaimer-card">
+      <div class="accent-line"></div>
+      <h2>Welcome to Littlefield Simulator</h2>
+      <p>This simulator was developed as an <strong style="color:#e2e8f0">AI-assisted educational tool</strong> to complement the Littlefield Technologies exercise. It was built in just a few hours using <a href="https://claude.ai" class="disclaimer-link">Claude</a> to demonstrate the potential of AI-assisted development.</p>
+      <p>It is designed to help you develop <strong style="color:#e2e8f0">deeper intuition</strong> about operations management concepts through interactive experimentation. Test hypotheses, explore trade-offs, and build understanding of how capacity, inventory, and contract decisions interact.</p>
+      <p>This tool is <strong style="color:#e2e8f0">not intended to replace</strong> the analytical thinking required by the assignment. What matters most in your learning is the intuition you develop along the way, not the final result.</p>
+      <p>Source code available on <a href="https://github.com/mahaddad/littlefield-sim" class="disclaimer-link">GitHub</a>.</p>
+      <button id="disclaimer-dismiss" class="disclaimer-btn" onclick="dismissDisclaimer()">I Understand</button>
+    </div>
+  </div>
 
 <script>
 /* ━━ Presets ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -1152,6 +1245,19 @@ function forkFromDay() {
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+/* ━━ Disclaimer ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function dismissDisclaimer() {
+  localStorage.setItem('disclaimer_seen', 'true');
+  document.getElementById('disclaimer-overlay').classList.add('hidden');
+}
+
+(function() {
+  if (localStorage.getItem('disclaimer_seen') === 'true') {
+    document.getElementById('disclaimer-overlay').classList.add('hidden');
+  }
+})();
 
 /* ━━ Init ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 loadPreset("balanced", document.getElementById("preset-balanced"));
