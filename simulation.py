@@ -74,6 +74,8 @@ class Simulation:
     def __init__(self, cfg: dict):
         self.rng         = random.Random(cfg.get("seed", 42))
         self.end_day     = cfg.get("end_day", 485)
+        self.start_day   = cfg.get("start_day", 0)
+        self.initial_cash = cfg.get("initial_cash", 0.0)
         self.lot_size    = cfg.get("lot_size", 60)
         self.arrival_mean = cfg.get("interarrival_mean", 0.125)
 
@@ -94,10 +96,12 @@ class Simulation:
         self.defer_buys   = cfg.get("defer_buys", False)
 
         self.timeline = sorted(cfg.get("timeline", []), key=lambda a: a["day"])
+        # Filter out timeline actions before start_day
+        self.timeline = [a for a in self.timeline if a["day"] >= self.start_day]
 
         # ── state ──
-        self.t        = 0.0
-        self.cash     = 0.0
+        self.t        = float(self.start_day)
+        self.cash     = float(self.initial_cash)
         self.seq      = 0
         self.heap     = []
         self.n_orders = 0
@@ -110,9 +114,9 @@ class Simulation:
         self._last_reorder_warn = -1  # dedup kit reorder warnings
 
         # ── metrics ──
-        self._last_day  = 0
+        self._last_day  = int(self.start_day)
         self._prev_busy = [0.0, 0.0, 0.0]
-        self._prev_t    = 0.0
+        self._prev_t    = float(self.start_day)
 
         self.ts_cash  = []
         self.ts_lt    = []
@@ -120,6 +124,7 @@ class Simulation:
         self.ts_util  = [[], [], []]
         self.ts_qlen  = [[], [], []]
         self.ts_rev   = []
+        self.ts_machines = []
         self.completed = 0
 
     # ── RNG helpers ──────────────────────────────────────────────────────
@@ -192,6 +197,7 @@ class Simulation:
                 if n > 0:
                     self.machines[idx] += n
                     self.cash -= MACHINE_COST[idx] * n
+                    self.ts_machines.append((int(self.t), list(self.machines)))
                     if orig_day is not None:
                         self.warnings.append(
                             f"Day {int(self.t)}: Bought {n} {name}(s) "
@@ -213,6 +219,7 @@ class Simulation:
                 if n > 0:
                     self.machines[idx] -= n
                     self.cash += MACHINE_SELL * n
+                    self.ts_machines.append((int(self.t), list(self.machines)))
             elif act == "set_contract":
                 self.price, self.quoted_lt, self.max_lt = CONTRACTS[int(val)]
             elif act == "set_lot_size":
@@ -351,7 +358,16 @@ class Simulation:
     # ── Main loop ────────────────────────────────────────────────────────
 
     def run(self) -> dict:
-        self._push(self._exp(self.arrival_mean), E.ARRIVAL)
+        # Record initial snapshot so scrubber has a data point at start_day
+        sd = int(self.start_day)
+        self.ts_cash.append((sd, round(self.cash, 2)))
+        self.ts_inv.append((sd, self.inv))
+        for s in range(3):
+            self.ts_util[s].append((sd, 0.0))
+            self.ts_qlen[s].append((sd, 0))
+        self.ts_machines.append((sd, list(self.machines)))
+
+        self._push(self.t + self._exp(self.arrival_mean), E.ARRIVAL)
 
         _handlers = {
             E.ARRIVAL:     self._on_arrival,
@@ -375,14 +391,6 @@ class Simulation:
         lts  = [v for _, v in self.ts_lt]
         revs = [v for _, v in self.ts_rev]
 
-        # day-50 snapshot for comparison with real game
-        day50 = {}
-        for series_name, series in [("cash", self.ts_cash), ("inventory", self.ts_inv)]:
-            for day, val in series:
-                if day >= 50:
-                    day50[series_name] = val
-                    break
-
         # smooth utilization with a 7-day rolling average
         def _smooth(series, window=7):
             out = []
@@ -396,6 +404,7 @@ class Simulation:
         return {
             "warnings": self.warnings,
             "summary": {
+                "start_day":         self.start_day,
                 "final_cash":        round(self.cash, 2),
                 "total_revenue":     round(sum(revs), 2),
                 "orders_completed":  self.completed,
@@ -403,8 +412,6 @@ class Simulation:
                 "avg_lead_time":     round(sum(lts) / len(lts), 3) if lts else 0,
                 "max_lead_time":     round(max(lts), 3) if lts else 0,
                 "avg_revenue":       round(sum(revs) / len(revs), 2) if revs else 0,
-                "day50_cash":        day50.get("cash", 0),
-                "day50_inventory":   day50.get("inventory", 0),
             },
             "charts": {
                 "cash":       self.ts_cash,
@@ -416,5 +423,7 @@ class Simulation:
                 "queue_0":    self.ts_qlen[0],
                 "queue_1":    self.ts_qlen[1],
                 "queue_2":    self.ts_qlen[2],
+                "revenue":    self.ts_rev,
+                "machines":   self.ts_machines,
             },
         }

@@ -531,10 +531,10 @@
         <h3>Step-by-Step Walkthrough</h3>
         <ol class="list-decimal list-inside space-y-3 ml-2 mb-4">
           <li>
-            <strong>Set Factory Setup</strong> (left card) &mdash; Enter the starting machines, lot size, and contract. These are the Day 0 defaults.
+            <strong>Set Factory Setup</strong> &mdash; Enter the starting machines, lot size, and contract. These are the Day 0 defaults.
           </li>
           <li>
-            <strong>Set Inventory Policy</strong> (middle card) &mdash; Starting kits, reorder point, and order quantity.
+            <strong>Set Inventory Policy</strong> &mdash; Starting kits, reorder point, and order quantity.
           </li>
           <li>
             <strong>Configure Strategy Timeline</strong> &mdash; This is the key feature. Add rows to schedule actions at specific days:
@@ -549,34 +549,52 @@
             <strong>Choose a Preset</strong> (or build your own) &mdash; Conservative, Balanced, and Aggressive presets are starting points you can customize.
           </li>
           <li>
-            <strong>Run Simulation</strong> &mdash; Results show final cash, lead times, utilization charts, and a Day 50 snapshot you can compare with your real game data.
+            <strong>Run Simulation</strong> &mdash; Results show final cash, lead times, utilization charts, and a day snapshot slider.
           </li>
           <li>
             <strong>Iterate</strong> &mdash; Tweak your timeline, change seeds to test different demand scenarios, and find the strategy that works best.
           </li>
         </ol>
 
+        <h3>Snapshot Slider &amp; Fork</h3>
+        <p>After running a simulation, a <strong>Snapshot at Day</strong> slider appears above the results. Drag it to any day to see the simulated state at that point &mdash; machines, cash, inventory, lead times, and all charts update instantly.</p>
+        <p>Use this to <strong>validate the simulator against your real game</strong>:</p>
+        <ol class="list-decimal list-inside space-y-2 ml-2 mb-4 text-sm">
+          <li>Run a full simulation from Day 0 with the default settings</li>
+          <li>Drag the slider to the current day in your real game</li>
+          <li>Compare the simulated cash, inventory, and machine counts against what you actually see in Littlefield</li>
+          <li>If the numbers are close, you can trust the sim's predictions going forward</li>
+        </ol>
+
+        <p>When you're ready to plan forward from mid-game, click <strong>Plan from Day X</strong>. This:</p>
+        <ul class="list-disc list-inside ml-4 mb-4 space-y-1 text-sm text-slate-400">
+          <li>Pre-fills Starting State with the sim's computed machines, cash, and inventory at that day</li>
+          <li>Sets the Start Day so the sim begins from your checkpoint</li>
+          <li>Keeps only future timeline actions (past actions are stripped)</li>
+          <li>Scrolls back to the top so you can tweak any values that differ from your real game, then re-run</li>
+        </ul>
+
         <div class="my-6 p-5 rounded-xl bg-white/[0.02] border border-white/5">
-          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Simulator Workflow</p>
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Recommended Workflow</p>
           <div class="flex flex-col sm:flex-row items-center gap-3 text-center text-sm">
-            <div class="px-4 py-3 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium w-full sm:w-auto">Configure</div>
+            <div class="px-4 py-3 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium w-full sm:w-auto">Run Full Sim</div>
             <span class="text-slate-600 hidden sm:block">&rarr;</span>
             <span class="text-slate-600 sm:hidden">&darr;</span>
-            <div class="px-4 py-3 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 font-medium w-full sm:w-auto">Add Actions</div>
+            <div class="px-4 py-3 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 font-medium w-full sm:w-auto">Scrub to Today</div>
             <span class="text-slate-600 hidden sm:block">&rarr;</span>
             <span class="text-slate-600 sm:hidden">&darr;</span>
-            <div class="px-4 py-3 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium w-full sm:w-auto">Run</div>
+            <div class="px-4 py-3 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium w-full sm:w-auto">Plan from Day X</div>
             <span class="text-slate-600 hidden sm:block">&rarr;</span>
             <span class="text-slate-600 sm:hidden">&darr;</span>
-            <div class="px-4 py-3 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium w-full sm:w-auto">Analyze</div>
+            <div class="px-4 py-3 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium w-full sm:w-auto">Plan Forward</div>
             <span class="text-slate-600 hidden sm:block">&rarr;</span>
             <span class="text-slate-600 sm:hidden">&darr;</span>
-            <div class="px-4 py-3 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium w-full sm:w-auto">Iterate</div>
+            <div class="px-4 py-3 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium w-full sm:w-auto">Re-run &amp; Iterate</div>
           </div>
         </div>
 
         <div class="callout callout-tip">
-          <strong>Pro tip:</strong> Use the <strong>Day 50 Snapshot</strong> in simulation results to compare against your real game dashboard. If the numbers match closely, you can trust the simulator's predictions for the rest of the game.
+          <strong>Pro tip:</strong> After forking, correct any values that don't match your real game (e.g. actual cash, inventory). This gives you a calibrated starting point so the sim's forward predictions are as accurate as possible.
         </div>
 
         <div id="action-failures"></div>

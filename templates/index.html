@@ -225,6 +225,38 @@
 
     .spinner { display: inline-block; width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Day scrubber */
+    .scrubber-wrap { padding: 20px 24px 16px; }
+    .scrubber-range {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px; border-radius: 3px;
+      background: rgba(255,255,255,0.08);
+      outline: none; cursor: pointer;
+    }
+    .scrubber-range::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 2px 8px rgba(99,102,241,0.4);
+      cursor: grab;
+    }
+    .scrubber-range::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.1); }
+    .scrubber-range::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 2px 8px rgba(99,102,241,0.4);
+      cursor: grab;
+    }
+    .fork-btn {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white; font-weight: 600; font-size: 13px;
+      padding: 8px 20px; border-radius: 10px; border: none;
+      cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .fork-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.35); }
   </style>
 </head>
 <body class="min-h-screen text-slate-300">
@@ -306,7 +338,7 @@
 
     <!-- ━━ Configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div>
-      <div class="section-label">Starting State <span class="ml-2 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400/70 text-[10px] font-semibold tracking-normal normal-case">Day 0</span></div>
+      <div class="section-label">Starting State <span id="day-badge" class="ml-2 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400/70 text-[10px] font-semibold tracking-normal normal-case">Day 0</span></div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         <!-- Factory -->
@@ -401,6 +433,18 @@
             </div>
             <h2 class="text-sm font-semibold text-white">Simulation</h2>
           </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Start Day</label>
+              <input id="start_day" type="number" value="0" min="0" max="485" class="input-field" oninput="updateDayBadge()">
+              <p class="text-[11px] text-slate-500 mt-1">0 = from scratch</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Initial Cash</label>
+              <input id="initial_cash" type="number" value="0" step="1000" class="input-field">
+              <p class="text-[11px] text-slate-500 mt-1">$ at start day</p>
+            </div>
+          </div>
           <div class="grid grid-cols-3 gap-4">
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1.5">End Day</label>
@@ -493,6 +537,40 @@
 
       <div class="section-label">Results</div>
 
+      <!-- Day Scrubber -->
+      <div id="scrubber-card" class="card scrubber-wrap">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Snapshot at Day</span>
+            <span id="scrub-day-label" class="text-lg font-bold text-white font-mono">0</span>
+          </div>
+          <button id="fork-btn" onclick="forkFromDay()" class="fork-btn">Plan from Day <span id="fork-day-label">0</span></button>
+        </div>
+        <input id="scrub-range" type="range" min="0" max="485" value="485" step="1" class="scrubber-range w-full" oninput="onScrubInput()" onchange="onScrubChange()">
+        <div id="scrub-readout" class="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">S1 Stuffers</p>
+            <p id="scrub-s1" class="text-sm font-semibold text-amber-300 font-mono">3</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">S2 Testers</p>
+            <p id="scrub-s2" class="text-sm font-semibold text-rose-300 font-mono">2</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">S3 Tuners</p>
+            <p id="scrub-s3" class="text-sm font-semibold text-blue-300 font-mono">1</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Cash</p>
+            <p id="scrub-cash" class="text-sm font-semibold text-emerald-300 font-mono">$0</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">Inventory</p>
+            <p id="scrub-inv" class="text-sm font-semibold text-violet-300 font-mono">0</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Summary Stats -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="stat-glass">
@@ -537,33 +615,6 @@
             <span class="text-[10px] font-semibold text-amber-400/60 uppercase tracking-wider">Avg Rev / Order</span>
           </div>
           <p id="stat-rev" class="text-2xl font-bold text-white">&mdash;</p>
-        </div>
-      </div>
-
-      <!-- Day 50 Snapshot -->
-      <div class="rounded-2xl bg-gradient-to-r from-indigo-500/5 to-violet-500/5 border border-indigo-500/10 p-5">
-        <div class="flex items-center gap-2 mb-3">
-          <svg class="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-          <span class="text-xs font-semibold text-indigo-300/80">Day 50 Snapshot</span>
-          <span class="text-[10px] text-indigo-300/40">&mdash; compare with your real game data</span>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Cash</p>
-            <p id="stat-d50-cash" class="text-sm font-semibold text-indigo-200 font-mono">&mdash;</p>
-          </div>
-          <div>
-            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Inventory</p>
-            <p id="stat-d50-inv" class="text-sm font-semibold text-indigo-200 font-mono">&mdash;</p>
-          </div>
-          <div>
-            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Max Lead Time</p>
-            <p id="stat-max-lt" class="text-sm font-semibold text-indigo-200 font-mono">&mdash;</p>
-          </div>
-          <div>
-            <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Waiting for Kits</p>
-            <p id="stat-waiting" class="text-sm font-semibold text-indigo-200 font-mono">&mdash;</p>
-          </div>
         </div>
       </div>
 
@@ -659,7 +710,8 @@ const ACTIONS = [
 
 /* ━━ Timeline ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-function addRow(day = 50, action = "buy_tester", value = 1) {
+function addRow(day, action = "buy_tester", value = 1) {
+  if (day === undefined) day = Math.max(Number(document.getElementById("start_day").value) || 0, 50);
   const body = document.getElementById("timeline-body");
   const row = document.createElement("div");
   row.className = "tl-row";
@@ -753,6 +805,7 @@ function getConfig() {
     defer_buys: document.getElementById("defer_buys").checked,
     initial_inventory: n("initial_inventory"),
     reorder_point: n("reorder_point"), order_quantity: n("order_quantity"),
+    start_day: n("start_day"), initial_cash: Number(document.getElementById("initial_cash").value),
     end_day: n("end_day"), interarrival_mean: Number(document.getElementById("interarrival_mean").value),
     seed: n("seed"), timeline,
   };
@@ -867,6 +920,9 @@ function renderCharts(c) {
 
 /* ━━ Run ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
+let _lastData = null;
+let _fullCharts = null;
+
 async function runSim() {
   const btn = document.getElementById("run-btn");
   const label = document.getElementById("run-label");
@@ -882,6 +938,9 @@ async function runSim() {
     const data = await resp.json();
     if (data.error) { alert("Error: " + data.error); return; }
 
+    _lastData = data;
+    _fullCharts = JSON.parse(JSON.stringify(data.charts));
+
     // Show warnings for blocked actions
     const wBox = document.getElementById("warnings-box");
     const wList = document.getElementById("warnings-list");
@@ -893,22 +952,27 @@ async function runSim() {
     }
 
     const s = data.summary;
+    const startDay = s.start_day || 0;
+    const endDay = Number(document.getElementById("end_day").value);
     const fmt = n => "$" + Math.round(n).toLocaleString();
 
     document.getElementById("stat-cash").textContent    = fmt(s.final_cash);
     document.getElementById("stat-lt").textContent       = s.avg_lead_time.toFixed(2) + " days";
     document.getElementById("stat-orders").textContent    = s.orders_completed.toLocaleString();
     document.getElementById("stat-rev").textContent       = fmt(s.avg_revenue);
-    document.getElementById("stat-d50-cash").textContent  = fmt(s.day50_cash);
-    document.getElementById("stat-d50-inv").textContent   = (s.day50_inventory || 0).toLocaleString() + " kits";
-    document.getElementById("stat-max-lt").textContent    = s.max_lead_time.toFixed(2) + " d";
-    document.getElementById("stat-waiting").textContent   = s.orders_waiting + " orders";
 
     renderCharts(data.charts);
 
+    // Set up scrubber
+    const slider = document.getElementById("scrub-range");
+    slider.min = startDay;
+    slider.max = endDay;
+    slider.value = endDay;
+    _scrubDay = endDay;
+    updateScrubReadout(endDay);
+
     const results = document.getElementById("results");
     results.classList.remove("hidden");
-    // Re-trigger animations
     results.style.animation = 'none';
     results.offsetHeight;
     results.style.animation = null;
@@ -924,8 +988,164 @@ async function runSim() {
   }
 }
 
+/* ━━ Day Badge ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function updateDayBadge() {
+  const badge = document.getElementById("day-badge");
+  const sd = Number(document.getElementById("start_day").value) || 0;
+  badge.textContent = "Day " + sd;
+}
+
+/* ━━ Day Scrubber ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+let _scrubDay = 0;
+let _scrubTimer = null;
+
+function onScrubInput() {
+  const day = Number(document.getElementById("scrub-range").value);
+  _scrubDay = day;
+  document.getElementById("scrub-day-label").textContent = day;
+  document.getElementById("fork-day-label").textContent = day;
+  updateScrubReadout(day);
+  clearTimeout(_scrubTimer);
+  _scrubTimer = setTimeout(() => scrubToDay(day), 80);
+}
+
+function onScrubChange() {
+  const day = Number(document.getElementById("scrub-range").value);
+  _scrubDay = day;
+  clearTimeout(_scrubTimer);
+  scrubToDay(day);
+}
+
+function updateScrubReadout(day) {
+  if (!_fullCharts) return;
+  document.getElementById("scrub-day-label").textContent = day;
+  document.getElementById("fork-day-label").textContent = day;
+
+  const mach = _fullCharts.machines || [];
+  let m = mach.length > 0 ? mach[0][1] : [3, 2, 1];
+  for (const entry of mach) { if (entry[0] <= day) m = entry[1]; else break; }
+  document.getElementById("scrub-s1").textContent = m[0];
+  document.getElementById("scrub-s2").textContent = m[1];
+  document.getElementById("scrub-s3").textContent = m[2];
+
+  const cashArr = _fullCharts.cash || [];
+  let cash = 0;
+  for (const entry of cashArr) { if (entry[0] <= day) cash = entry[1]; else break; }
+  document.getElementById("scrub-cash").textContent = "$" + Math.round(cash).toLocaleString();
+
+  const invArr = _fullCharts.inventory || [];
+  let inv = 0;
+  for (const entry of invArr) { if (entry[0] <= day) inv = entry[1]; else break; }
+  document.getElementById("scrub-inv").textContent = inv.toLocaleString();
+}
+
+function scrubToDay(day) {
+  if (!_fullCharts || !charts["chart-cash"]) return;
+
+  function filterTS(arr) { return arr.filter(e => e[0] <= day); }
+
+  const cashF = filterTS(_fullCharts.cash);
+  const ltF   = filterTS(_fullCharts.lead_times);
+  const revF  = filterTS(_fullCharts.revenue || []);
+
+  const fmt = n => "$" + Math.round(n).toLocaleString();
+  const lts = ltF.map(e => e[1]);
+  const revs = revF.map(e => e[1]);
+
+  document.getElementById("stat-cash").textContent   = cashF.length ? fmt(cashF[cashF.length - 1][1]) : "$0";
+  document.getElementById("stat-lt").textContent      = lts.length ? (lts.reduce((a,b) => a+b, 0) / lts.length).toFixed(2) + " days" : "0 days";
+  document.getElementById("stat-orders").textContent   = lts.length.toLocaleString();
+  document.getElementById("stat-rev").textContent      = revs.length ? fmt(revs.reduce((a,b) => a+b, 0) / revs.length) : "$0";
+  const c = charts;
+
+  const cashData = filterTS(_fullCharts.cash);
+  c["chart-cash"].data.labels = cashData.map(p => p[0]);
+  c["chart-cash"].data.datasets[0].data = cashData.map(p => p[1]);
+
+  const ltData = filterTS(_fullCharts.lead_times);
+  c["chart-lt"].data.datasets[0].data = ltData.map(p => ({ x: p[0], y: p[1] }));
+
+  const u0 = filterTS(_fullCharts.util_0);
+  const u1 = filterTS(_fullCharts.util_1);
+  const u2 = filterTS(_fullCharts.util_2);
+  c["chart-util"].data.labels = u0.map(p => p[0]);
+  c["chart-util"].data.datasets[0].data = u0.map(p => p[1]);
+  c["chart-util"].data.datasets[1].data = u1.map(p => p[1]);
+  c["chart-util"].data.datasets[2].data = u2.map(p => p[1]);
+
+  const invData = filterTS(_fullCharts.inventory);
+  c["chart-inv"].data.labels = invData.map(p => p[0]);
+  c["chart-inv"].data.datasets[0].data = invData.map(p => p[1]);
+
+  Object.values(c).forEach(ch => ch.update("none"));
+}
+
+/* ━━ Fork from Day ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+function forkFromDay() {
+  if (!_fullCharts) return;
+  const day = _scrubDay;
+
+  const mach = _fullCharts.machines || [];
+  let m = mach.length > 0 ? mach[0][1] : [3, 2, 1];
+  for (const entry of mach) { if (entry[0] <= day) m = entry[1]; else break; }
+
+  const cashArr = _fullCharts.cash || [];
+  let cash = 0;
+  for (const entry of cashArr) { if (entry[0] <= day) cash = entry[1]; else break; }
+
+  const invArr = _fullCharts.inventory || [];
+  let inv = 0;
+  for (const entry of invArr) { if (entry[0] <= day) inv = entry[1]; else break; }
+
+  // Replay timeline to compute effective settings at fork day
+  const origCfg = getConfig();
+  let contract = Number(document.getElementById("contract").value);
+  let lotSize = Number(document.getElementById("lot_size").value);
+  let rop = Number(document.getElementById("reorder_point").value);
+  let roq = Number(document.getElementById("order_quantity").value);
+  let prio = document.getElementById("priority_step4").checked;
+
+  const sortedTL = (origCfg.timeline || []).slice().sort((a, b) => a.day - b.day);
+  for (const a of sortedTL) {
+    if (a.day > day) break;
+    if (a.action === "set_contract") contract = Number(a.value);
+    if (a.action === "set_lot_size") lotSize = Number(a.value);
+    if (a.action === "set_reorder_point") rop = Number(a.value);
+    if (a.action === "set_order_quantity") roq = Number(a.value);
+    if (a.action === "set_priority_step4") prio = !!Number(a.value);
+  }
+
+  // Pre-fill inputs
+  document.getElementById("stuffers").value = m[0];
+  document.getElementById("testers").value = m[1];
+  document.getElementById("tuners").value = m[2];
+  document.getElementById("start_day").value = day;
+  document.getElementById("initial_cash").value = Math.round(cash);
+  document.getElementById("initial_inventory").value = Math.round(inv);
+  document.getElementById("contract").value = contract;
+  document.getElementById("lot_size").value = lotSize;
+  document.getElementById("reorder_point").value = rop;
+  document.getElementById("order_quantity").value = roq;
+  document.getElementById("priority_step4").checked = prio;
+
+  // Strip timeline rows before fork day
+  const futureActions = sortedTL.filter(a => a.day > day);
+  document.getElementById("timeline-body").innerHTML = "";
+  document.querySelectorAll("#preset-btns .preset-btn").forEach(b => b.classList.remove("active"));
+  futureActions.forEach(a => addRow(a.day, a.action, a.value));
+
+  updateDayBadge();
+  updateFinalState();
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 /* ━━ Init ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 loadPreset("balanced", document.getElementById("preset-balanced"));
+updateDayBadge();
 </script>
 </body>
 </html>
